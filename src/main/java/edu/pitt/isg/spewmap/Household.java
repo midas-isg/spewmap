@@ -18,6 +18,5 @@ public class Household {
     /** Total income */
     private Integer inctot;
     private String hid;
-    @JsonIgnore
     private Geometry point;
 }
