@@ -1,4 +1,4 @@
-package edu.pitt.isg.spewmap;
+package edu.pitt.isg.spewmap.spe;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
