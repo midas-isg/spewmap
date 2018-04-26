@@ -15,10 +15,11 @@
 <body>
 
 <div id='map'></div>
-<!--<script type="text/javascript" th:src="@{/js/bbox.geojson.js}"></script>-->
-<script type="text/javascript" th:src="@{/js/multiPoint.geojson.js}"></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
+    // WY: #center=-107.2903,43.0760&zoom=7&limit=700000
+    // Pgh: #center=-80.0,40.45&zoom=10
+    // AK: #center=-149.4937,64.2008&zoom=4&limit=300000
     var CONTEXT = '/spewmap';
     var hash = toDict(location.hash);
     console.log(hash);
@@ -44,7 +45,7 @@
         // center: [-80.0007210698959, 40.449062865718204] // PGH
         // zoom: 5, // = 9.2MB = 28.3MB = 43.7MB at -149.4937, 64.2008
         // zoom: 4, // = 10.8MB = ? = 51.3MB at -149.4937, 64.2008
-        // center: [-149.4937, 64.2008] // AS
+        // center: [-149.4937, 64.2008] // AK
     });
     map.on('load', onLoad);
     map.on('zoomend', onZoomend);
@@ -118,7 +119,7 @@
     }
 
     function onZoomend() {
-        var id = 'household-persons';
+        /*var id = 'household-persons';
         var theZoom = 18;
         var zoom = map.getZoom();
         if (map.getLayer(id)) {
@@ -126,7 +127,7 @@
                 map.removeLayer(id);
         } else if (zoom >= theZoom) {
             addLabelLayer(id);
-        }
+        }*/
     }
 
     function toCsv(bbox) {
