@@ -1,0 +1,129 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset='utf-8' />
+    <title>Style circles with a data-driven property</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+<!--<script type="text/javascript" th:src="@{/js/bbox.geojson.js}"></script>-->
+<script type="text/javascript" th:src="@{/js/multiPoint.geojson.js}"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic2FoYXd1dDB5YWhvbyIsImEiOiJjamdjcnRlNmVhMm52MndudnBzcGYxMXM2In0.tunR_ko7G4z0bqKefTs-pw';
+    var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/light-v9',
+        zoom: 13,
+        // center: [-80.0, 40.45]
+         center: [-80.0007210698959, 40.449062865718204]
+        //zoom: 5, // = 43.7MB at -149.4937, 64.2008
+        //zoom: 4, //= 51.3MB at -149.4937, 64.2008
+        //center: [-149.4937, 64.2008]
+    });
+    map.on('load', onLoad);
+    map.on('zoomend', onZoomend);
+    map.on('moveend', loadHousehold);
+    var householdAsCircleId = 'household-as-circle';
+
+    function loadHousehold() {
+        var bbox = map.getBounds();
+        var csv = toCsv(bbox);
+        var url = 'http://localhost:8080/households/bbox/' + csv;
+
+        var id = 'households';
+        var source = map.getSource(id);
+        if (source) {
+            map.removeLayer(householdAsCircleId);
+            var labelId = 'household-persons';
+            var labelLayer = map.getLayer(labelId);
+            if (labelLayer)
+                map.removeLayer(labelId);
+            map.removeSource(id);
+            map.addSource(id, {
+                type: 'geojson',
+                data: geojson//url
+            });
+            // source.load({
+            //     type: 'geojson',
+            //     data: url
+            // });
+            addCircleLayer(householdAsCircleId);
+            if (labelLayer)
+                addLabelLayer(labelId);
+        } else {
+            map.addSource(id, {
+                type: 'geojson',
+                data: url
+            });
+        }
+    }
+
+    function addCircleLayer(id) {
+        map.addLayer({
+            id: id,
+            type: 'circle',
+            source: 'households',
+            paint: {
+                'circle-radius': {
+                    base: 1,//.75,
+                    stops: [ [12, 2], [22, 50] ]
+                },
+                'circle-color': 'orange'
+            },
+            filter: ['==', '$type', 'Point']
+        });
+    }
+
+    function onLoad() {
+        loadHousehold();
+        addCircleLayer(householdAsCircleId);
+        onZoomend();
+    }
+
+    function addLabelLayer(id) {
+        map.addLayer({
+            id: id,
+            type: 'symbol',
+            source: 'households',
+            layout: {
+                'text-allow-overlap': true,
+                'text-offset': [0, 0],
+                'text-field': '{persons}'
+            }
+        });
+    }
+
+    function onZoomend() {
+        var id = 'household-persons';
+        var theZoom = 18;
+        var zoom = map.getZoom();
+        if (map.getLayer(id)) {
+            if (zoom < theZoom)
+                map.removeLayer(id);
+        } else if (zoom >= theZoom) {
+            addLabelLayer(id);
+        }
+    }
+
+    function toCsv(bbox) {
+        var e = bbox.getEast();
+        var n = bbox.getNorth();
+        var w = bbox.getWest();
+        var s = bbox.getSouth();
+        return e + ',' + n + ',' + w + ',' + s;
+    }
+    /*]]>*/
+</script>
+
+</body>
+</html>

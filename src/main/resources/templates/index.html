@@ -1,0 +1,178 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset='utf-8' />
+    <title>Style circles with a data-driven property</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+<!--<script type="text/javascript" th:src="@{/js/bbox.geojson.js}"></script>-->
+<script type="text/javascript" th:src="@{/js/multiPoint.geojson.js}"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var CONTEXT = '/spewmap';
+    var hash = toDict(location.hash);
+    console.log(hash);
+    var m ={
+        limit: toNumber(hash, 'limit') || 500000,
+        center: toCenter(hash) || [-149.4937, 64.2008], // AS //[-80.0, 40.45] // PGH
+        zoom: toNumber(hash, 'zoom') || 18
+    };
+    console.log(m);
+
+    mapboxgl.accessToken = 'pk.eyJ1Ijoic2FoYXd1dDB5YWhvbyIsImEiOiJjamdjcnRlNmVhMm52MndudnBzcGYxMXM2In0.tunR_ko7G4z0bqKefTs-pw';
+    var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/light-v9',
+        zoom: m.zoom,
+        center: m.center
+        // zoom: 10, // = 46KB
+        // zoom: 8, // = 2.8MB
+        // zoom: 7, // = 25MB
+        // center: [-107.2903, 43.0760] // WY
+        // zoom: 13, // 4.4MB @ -80.0, 40.45
+        // center: [-80.0, 40.45] // PGH
+        // center: [-80.0007210698959, 40.449062865718204] // PGH
+        // zoom: 5, // = 9.2MB = 28.3MB = 43.7MB at -149.4937, 64.2008
+        // zoom: 4, // = 10.8MB = ? = 51.3MB at -149.4937, 64.2008
+        // center: [-149.4937, 64.2008] // AS
+    });
+    map.on('load', onLoad);
+    map.on('zoomend', onZoomend);
+    map.on('moveend', loadHousehold);
+    var householdAsCircleId = 'household-as-circle';
+
+    function addSource(id, url) {
+        map.addSource(id, {
+            type: 'geojson',
+            data: url + "?size=" + m.limit
+            // data: url + "?size=2147483647"
+        });
+    }
+
+    function loadHousehold() {
+        var bbox = map.getBounds();
+        var csv = toCsv(bbox);
+        var url = CONTEXT + '/households/bbox/' + csv;
+
+        var id = 'households';
+        var source = map.getSource(id);
+        if (source) {
+            map.removeLayer(householdAsCircleId);
+            var labelId = 'household-persons';
+            var labelLayer = map.getLayer(labelId);
+            if (labelLayer)
+                map.removeLayer(labelId);
+            map.removeSource(id);
+            addSource(id, url);
+            addCircleLayer(householdAsCircleId);
+            if (labelLayer)
+                addLabelLayer(labelId);
+        } else {
+            addSource(id, url);
+        }
+    }
+
+    function addCircleLayer(id) {
+        map.addLayer({
+            id: id,
+            type: 'circle',
+            source: 'households',
+            paint: {
+                'circle-radius': {
+                    base: 1.75,
+                    stops: [ [12, 2], [22, 50] ]
+                },
+                'circle-color': 'orange'
+            },
+            filter: ['==', '$type', 'Point']
+        });
+    }
+
+    function onLoad() {
+        loadHousehold();
+        addCircleLayer(householdAsCircleId);
+        onZoomend();
+    }
+
+    function addLabelLayer(id) {
+        map.addLayer({
+            id: id,
+            type: 'symbol',
+            source: 'households',
+            layout: {
+                'text-allow-overlap': true,
+                'text-offset': [0, 0],
+                'text-field': '{persons}'
+            }
+        });
+    }
+
+    function onZoomend() {
+        var id = 'household-persons';
+        var theZoom = 18;
+        var zoom = map.getZoom();
+        if (map.getLayer(id)) {
+            if (zoom < theZoom)
+                map.removeLayer(id);
+        } else if (zoom >= theZoom) {
+            addLabelLayer(id);
+        }
+    }
+
+    function toCsv(bbox) {
+        var e = bbox.getEast();
+        var n = bbox.getNorth();
+        var w = bbox.getWest();
+        var s = bbox.getSouth();
+        return e + ',' + n + ',' + w + ',' + s;
+    }
+
+    function toDict(query){
+        var hash2Obj = query.replace("#", "")
+            .split("&")
+            .map( el => el.split("=") )
+    .reduce( (pre, cur) => {
+            pre[cur[0]] = cur[1];
+        return pre; }
+    , {} );
+
+        return hash2Obj;
+    }
+
+    function toCenter(hash) {
+        text = hash['center'];
+        if (text && text.includes(",")){
+            tokens = text.split(",");
+            return [tokens[0].valueOf(), tokens[1].valueOf()];
+        }
+        return null
+    }
+
+    function toNumber(hash, key) {
+        text = hash[key];
+        if (text){
+            var value = text.valueOf();
+            var maxValue = 325e4; // 35e5 = crash
+            if (value > maxValue){
+                console.log("Requested limit=" + value + " is too much; it might crash your browser. Set limit to " + maxValue + " to avoid the crash.");
+                return maxValue;
+            }
+            return value;
+        }
+        return null;
+    }
+    /*]]>*/
+</script>
+
+</body>
+</html>

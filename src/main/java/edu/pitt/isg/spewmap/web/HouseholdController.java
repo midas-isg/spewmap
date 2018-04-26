@@ -1,11 +1,20 @@
 package edu.pitt.isg.spewmap.web;
 
+import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.MultiPoint;
+import com.vividsolutions.jts.geom.Point;
 import edu.pitt.isg.spewmap.ResourceNotFound;
+import edu.pitt.isg.spewmap.geom.Feature;
+import edu.pitt.isg.spewmap.geom.GeometryAid;
+import edu.pitt.isg.spewmap.geom.PropertyMap;
 import edu.pitt.isg.spewmap.spe.Household;
 import edu.pitt.isg.spewmap.spe.HouseholdRepo;
-import edu.pitt.isg.spewmap.geom.GeometryAid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,34 +22,95 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Stream;
 
+import static edu.pitt.isg.spewmap.geom.GeometryAid.GEOJSON;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 
 @RestController
 @RequestMapping("/households")
 @RequiredArgsConstructor
+@Slf4j
 public class HouseholdController {
+    private static final String READ = "/{id}";
+    private static final String BBOX = "/bbox/{xMin},{yMin},{xMax},{yMax}";
+
     private final HouseholdRepo repo;
     private final GeometryAid aid;
 
-    @GetMapping("/{id}")
+    @RequestMapping(path=READ, produces={GEOJSON})
+    public Object readGeoJson(@PathVariable Long id){
+        return aid.toFeature(read(id));
+    }
+
+    @GetMapping(READ)
     public Household read(@PathVariable Long id){
         try {
-            return repo.findById(id).get();
+            final Household household = repo.findById(id).get();
+            return household;
         } catch (NoSuchElementException e){
-            throw new ResourceNotFound("No household with ID = " + id, e);
+            throw new ResourceNotFound("No household with READ = " + id, e);
         }
     }
 
 
-    @GetMapping("/bbox/{xMin},{yMin},{xMax},{yMax}")
-    public Object findAllByBoundingBox(@PathVariable Double xMin,
+    @GetMapping(BBOX)
+    //@RequestMapping(path=BBOX)//, produces={GEOJSON})
+    public Object findAllAsGeoJosnByBoundingBox(@PathVariable Double xMin,
                                        @PathVariable Double yMin,
                                        @PathVariable Double xMax,
-                                       @PathVariable Double yMax){
-        final Geometry box = aid.boxPolygon(xMin, yMin, xMax, yMax);
-        final List<Household> households = repo.findAllWithinGeometry(box);
-        return households;
+                                       @PathVariable Double yMax,
+                                                Pageable pageable) throws Exception {
+        log.info("finding ...");
+        Page<Household> page = findAllByBoundingBox(xMin, yMin, xMax, yMax, pageable);
+        List<Household> all = page.getContent();
+        final String querySummary = "# Points = " + all.size() + " / " + pageable.getPageSize() + " / " + page.getTotalElements();
+        log.info(querySummary);
+//        return aid.toFeatureCollection(all);
+        final Feature feature = toFeature(all);
+        final PropertyMap properties = (PropertyMap) feature.getProperties();
+        properties.put("querySummary", querySummary);
+
+        log.info("Returned object");
+        return feature;
     }
 
+    //@GetMapping(BBOX)
+    public Page<Household> findAllByBoundingBox(@PathVariable Double xMin,
+                                                @PathVariable Double yMin,
+                                                @PathVariable Double xMax,
+                                                @PathVariable Double yMax,
+                                                Pageable page){
+        final Geometry box = aid.boxPolygon(xMin, yMin, xMax, yMax);
+        return repo.findWithinGeometry(box, page);
+    }
+
+    public Feature toFeature(List<Household> hhs) throws Exception{
+        final Point[] points = hhs.stream()
+                .map(Household::getPoint)
+                .toArray(Point[]::new);
+        final Feature f = new Feature();
+        final Geometry geometry = new MultiPoint(points, new GeometryFactory());
+        f.setGeometry(geometry);
+        f.setProperties(new PropertyMap());
+        return f;
+    }
+
+    public Feature toFeature1(List<Household> hhs) throws Exception{
+        final String coordinates = hhs.stream()
+                .map(this::toArray)
+                .collect(joining(","));
+        final Feature f = new Feature();
+        final Geometry geometry = aid.wktToGeometry("MultiPoint(" + coordinates + ")");
+        f.setGeometry(geometry);
+        return f;
+    }
+
+    private String toArray(Household household) {
+        final Geometry point = household.getPoint();
+        final Coordinate coordinate = point.getCoordinate();
+        return coordinate.x + " " + coordinate.y;
+    }
 }

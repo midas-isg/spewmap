@@ -6,17 +6,21 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 
-import static edu.pitt.isg.spewmap.repo.HouseholdRepoTests.validHouseholdId;
 import static edu.pitt.isg.spewmap.Strings.urlHouseHold;
 import static edu.pitt.isg.spewmap.Strings.urlHouseHoldsByBox;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpStatus.OK;
 
 @ExtendWith(SpringExtension.class)
@@ -27,7 +31,7 @@ public class SpewmapApplicationTests {
 
 	@Test
 	void validHousehold() {
-		final long id = validHouseholdId;
+		final long id = 4353629L;
 		final String validHouseHoldUrl = urlHouseHold(id);
 
 		final ResponseEntity<Household> res = getHousehold(validHouseHoldUrl);
@@ -63,10 +67,18 @@ public class SpewmapApplicationTests {
 
 	private ResponseEntity<Household[]> getHouseholdsByBox(List<Double> values) {
 		final String url = urlHouseHoldsByBox(values);
-		return restTemplate.getForEntity(url, Household[].class);
+		final HttpEntity<Household[]> entity = new HttpEntity<>(httpHeaders());
+		return restTemplate.exchange(url, GET, entity, Household[].class);
 	}
 
 	private ResponseEntity<Household> getHousehold(String url) {
-		return restTemplate.getForEntity(url, Household.class);
+		final HttpEntity<Household> entity = new HttpEntity<>(httpHeaders());
+		return restTemplate.exchange(url, GET, entity, Household.class);
+	}
+
+	private HttpHeaders httpHeaders() {
+		final HttpHeaders headers = new HttpHeaders();
+		headers.setAccept(singletonList(MediaType.APPLICATION_JSON));
+		return headers;
 	}
 }

@@ -1,16 +1,19 @@
 package edu.pitt.isg.spewmap.spe;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.vividsolutions.jts.geom.Geometry;
+import edu.pitt.isg.spewmap.geom.Properties;
 import lombok.Data;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import com.vividsolutions.jts.geom.Geometry;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 @Entity
 @Data
-public class Household {
+@JsonInclude(NON_NULL)
+public class Household implements Properties {
     @Id
     private Long id;
     private String puma;

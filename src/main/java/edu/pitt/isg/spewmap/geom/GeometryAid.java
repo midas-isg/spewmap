@@ -4,22 +4,47 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 import edu.pitt.isg.spewmap.BadInput;
+import edu.pitt.isg.spewmap.spe.Household;
 import lombok.RequiredArgsConstructor;
 import org.assertj.core.util.VisibleForTesting;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 @Service
 @RequiredArgsConstructor
 public class GeometryAid {
+    public static final String GEOJSON = "application/geo+json";
+
+    public Feature toFeature(Household hh) {
+        final Feature f = new Feature();
+        f.setGeometry(hh.getPoint());
+        /*hh.setPoint(null);
+        f.setProperties(hh);*/
+        return f;
+    }
+
+    public FeatureCollection toFeatureCollection(List<Household> hhs) {
+        final List<Feature> fs= hhs.stream()
+                .map(this::toFeature)
+                .collect(toList());
+        final FeatureCollection fc = new FeatureCollection();
+        fc.setFeatures(fs);
+        fc.getProperties().put("ext", "test");
+        return fc;
+    }
+
     public Geometry boxPolygon(double x1, double y1, double x2, double y2) {
-        final String wkt = boxWkt(x1, y1, x2, y2);
+         final String wkt = boxWkt(x1, y1, x2, y2);
         try {
             return wktToGeometry(wkt);
         } catch (ParseException e) {
-            throw new BadInput("Could not create a valid box from:" + asList(x1, y1, x2, y2), e);
+            throw new BadInput("Could not create a valid box from:"
+                    + asList(x1, y1, x2, y2), e);
         }
     }
 
@@ -43,7 +68,7 @@ public class GeometryAid {
     }
 
     @VisibleForTesting
-    Geometry wktToGeometry(String wkt) throws ParseException {
+    public Geometry wktToGeometry(String wkt) throws ParseException {
         return new WKTReader().read(wkt);
     }
 }
