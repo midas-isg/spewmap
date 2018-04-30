@@ -23,8 +23,8 @@ public class GeometryAid {
     public Feature toFeature(Household hh) {
         final Feature f = new Feature();
         f.setGeometry(hh.getPoint());
-        /*hh.setPoint(null);
-        f.setProperties(hh);*/
+        hh.setPoint(null);
+        f.setProperties(hh);
         return f;
     }
 

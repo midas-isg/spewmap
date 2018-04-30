@@ -10,22 +10,67 @@
     <style>
         body { margin:0; padding:0; }
         #map { position:absolute; top:0; bottom:0; width:100%; }
+
+        #menu {
+            background: #fff;
+            position: absolute;
+            z-index: 1;
+            top: 10px;
+            right: 10px;
+            border-radius: 3px;
+            width: 120px;
+            border: 1px solid rgba(0,0,0,0.4);
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        #menu a {
+            font-size: 13px;
+            color: #404040;
+            display: block;
+            margin: 0;
+            padding: 0;
+            padding: 10px;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(0,0,0,0.25);
+            text-align: center;
+        }
+
+        #menu a:last-child {
+            border: none;
+        }
+
+        #menu a:hover {
+            background-color: #f8f8f8;
+            color: #404040;
+        }
+
+        #menu a.active {
+            background-color: #3887be;
+            color: #ffffff;
+        }
+
+        #menu a.active:hover {
+            background: #3074a4;
+        }
+
     </style>
 </head>
 <body>
 
 <div id='map'></div>
+<nav id="menu"></nav>
+
 <script th:inline="javascript">
     /*<![CDATA[*/
     // WY: #center=-107.2903,43.0760&zoom=7&limit=700000
-    // Pgh: #center=-80.0,40.45&zoom=10
+    // Pgh: #center=-80.0,40.45&zoom=11&limit=600000
     // AK: #center=-149.4937,64.2008&zoom=4&limit=300000
     var CONTEXT = '/spewmap';
     var hash = toDict(location.hash);
     console.log(hash);
     var m ={
         limit: toNumber(hash, 'limit') || 500000,
-        center: toCenter(hash) || [-149.4937, 64.2008], // AS //[-80.0, 40.45] // PGH
+        center: toCenter(hash) || [-149.4937, 64.2008], // AK //[-80.0, 40.45] // PGH
         zoom: toNumber(hash, 'zoom') || 18
     };
     console.log(m);
@@ -33,43 +78,35 @@
     mapboxgl.accessToken = 'pk.eyJ1Ijoic2FoYXd1dDB5YWhvbyIsImEiOiJjamdjcnRlNmVhMm52MndudnBzcGYxMXM2In0.tunR_ko7G4z0bqKefTs-pw';
     var map = new mapboxgl.Map({
         container: 'map',
-        style: 'mapbox://styles/mapbox/light-v9',
+        // style: 'mapbox://styles/mapbox/light-v9',
+        style: 'mapbox://styles/tps23/cjggv0hzt001h2rlnzo7gy6rk',
         zoom: m.zoom,
         center: m.center
-        // zoom: 10, // = 46KB
-        // zoom: 8, // = 2.8MB
-        // zoom: 7, // = 25MB
-        // center: [-107.2903, 43.0760] // WY
-        // zoom: 13, // 4.4MB @ -80.0, 40.45
-        // center: [-80.0, 40.45] // PGH
-        // center: [-80.0007210698959, 40.449062865718204] // PGH
-        // zoom: 5, // = 9.2MB = 28.3MB = 43.7MB at -149.4937, 64.2008
-        // zoom: 4, // = 10.8MB = ? = 51.3MB at -149.4937, 64.2008
-        // center: [-149.4937, 64.2008] // AK
     });
     map.on('load', onLoad);
     map.on('zoomend', onZoomend);
-    map.on('moveend', loadHousehold);
+    map.on('moveend', onMoveend);
     var householdAsCircleId = 'household-as-circle';
 
     function addSource(id, url) {
         map.addSource(id, {
             type: 'geojson',
             data: url + "?size=" + m.limit
-            // data: url + "?size=2147483647"
         });
     }
 
     function loadHousehold() {
+        var labelId = 'household-persons';
         var bbox = map.getBounds();
         var csv = toCsv(bbox);
-        var url = CONTEXT + '/households/bbox/' + csv;
+        var url = CONTEXT + '/households/api/bbox/' + csv;
 
         var id = 'households';
         var source = map.getSource(id);
         if (source) {
-            map.removeLayer(householdAsCircleId);
-            var labelId = 'household-persons';
+            var circleLayer = map.getLayer(householdAsCircleId);
+            if (circleLayer)
+                map.removeLayer(householdAsCircleId);
             var labelLayer = map.getLayer(labelId);
             if (labelLayer)
                 map.removeLayer(labelId);
@@ -80,6 +117,8 @@
                 addLabelLayer(labelId);
         } else {
             addSource(id, url);
+            addCircleLayer(householdAsCircleId);
+            addLabelLayer(labelId);
         }
     }
 
@@ -88,21 +127,27 @@
             id: id,
             type: 'circle',
             source: 'households',
+            visibility: map.autoLoadHousehold ? 'visible' : 'none',
             paint: {
                 'circle-radius': {
                     base: 1.75,
                     stops: [ [12, 2], [22, 50] ]
                 },
-                'circle-color': 'orange'
+                'circle-color': 'red'// 'orange'
             },
             filter: ['==', '$type', 'Point']
         });
     }
 
     function onLoad() {
-        loadHousehold();
-        addCircleLayer(householdAsCircleId);
-        onZoomend();
+        map.autoLoadHousehold = false;
+        onMoveend();
+    }
+
+    function onMoveend() {
+        if (map.autoLoadHousehold) {
+            loadHousehold();
+        }
     }
 
     function addLabelLayer(id) {
@@ -110,6 +155,7 @@
             id: id,
             type: 'symbol',
             source: 'households',
+            minzoom: 18,
             layout: {
                 'text-allow-overlap': true,
                 'text-offset': [0, 0],
@@ -119,15 +165,8 @@
     }
 
     function onZoomend() {
-        /*var id = 'household-persons';
-        var theZoom = 18;
         var zoom = map.getZoom();
-        if (map.getLayer(id)) {
-            if (zoom < theZoom)
-                map.removeLayer(id);
-        } else if (zoom >= theZoom) {
-            addLabelLayer(id);
-        }*/
+        console.log('Zoom=' + zoom);
     }
 
     function toCsv(bbox) {
@@ -172,6 +211,33 @@
         }
         return null;
     }
+
+    var link = document.createElement('a');
+    link.href = '#';
+    link.className = ''; //'active';
+    link.textContent = "Interactive";
+
+    link.onclick = function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var visibility = map.autoLoadHousehold;
+        map.autoLoadHousehold = !map.autoLoadHousehold;
+        onMoveend();
+        onZoomend();
+
+        var clickedLayer = householdAsCircleId;
+        if (visibility === true) {
+            map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+            this.className = '';
+        } else {
+            this.className = 'active';
+            map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+        }
+    };
+
+    var layers = document.getElementById('menu');
+    layers.appendChild(link);
     /*]]>*/
 </script>
 

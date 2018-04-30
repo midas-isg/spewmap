@@ -7,6 +7,7 @@ import com.vividsolutions.jts.geom.MultiPoint;
 import com.vividsolutions.jts.geom.Point;
 import edu.pitt.isg.spewmap.ResourceNotFound;
 import edu.pitt.isg.spewmap.geom.Feature;
+import edu.pitt.isg.spewmap.geom.FeatureCollection;
 import edu.pitt.isg.spewmap.geom.GeometryAid;
 import edu.pitt.isg.spewmap.geom.PropertyMap;
 import edu.pitt.isg.spewmap.spe.Household;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 
@@ -64,11 +66,10 @@ public class HouseholdController {
                                        @PathVariable Double yMax,
                                                 Pageable pageable) throws Exception {
         log.info("finding ...");
-        Page<Household> page = findAllByBoundingBox(xMin, yMin, xMax, yMax, pageable);
+        Page<Household> page = getHouseholds(xMin, yMin, xMax, yMax, pageable);
         List<Household> all = page.getContent();
         final String querySummary = "# Points = " + all.size() + " / " + pageable.getPageSize() + " / " + page.getTotalElements();
         log.info(querySummary);
-//        return aid.toFeatureCollection(all);
         final Feature feature = toFeature(all);
         final PropertyMap properties = (PropertyMap) feature.getProperties();
         properties.put("querySummary", querySummary);
@@ -77,12 +78,26 @@ public class HouseholdController {
         return feature;
     }
 
-    //@GetMapping(BBOX)
-    public Page<Household> findAllByBoundingBox(@PathVariable Double xMin,
+    @GetMapping("/api" + BBOX)
+    public Object findAllByBoundingBox(@PathVariable Double xMin,
                                                 @PathVariable Double yMin,
                                                 @PathVariable Double xMax,
                                                 @PathVariable Double yMax,
-                                                Pageable page){
+                                                Pageable pageable){
+        log.info("finding ...");
+        Page<Household> page = getHouseholds(xMin, yMin, xMax, yMax, pageable);
+        List<Household> all = page.getContent();
+        final String querySummary = "# Points = " + all.size() + " / " + pageable.getPageSize() + " / " + page.getTotalElements();
+        log.info(querySummary);
+        final FeatureCollection fc = aid.toFeatureCollection(all);
+        final Map<String, Object> properties = fc.getProperties();
+        properties.put("querySummary", querySummary);
+
+        log.info("Returned object");
+        return fc;
+    }
+
+    private Page<Household> getHouseholds(@PathVariable Double xMin, @PathVariable Double yMin, @PathVariable Double xMax, @PathVariable Double yMax, Pageable page) {
         final Geometry box = aid.boxPolygon(xMin, yMin, xMax, yMax);
         return repo.findWithinGeometry(box, page);
     }
