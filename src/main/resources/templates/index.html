@@ -66,6 +66,10 @@
     // Pgh: #center=-80.0,40.45&zoom=11&limit=600000
     // AK: #center=-149.4937,64.2008&zoom=4&limit=300000
     var CONTEXT = '/spewmap';
+    var circleId = 'household-as-circle';
+    var labelId = 'household-persons';
+    var layerIds = [circleId, labelId];
+
     var hash = toDict(location.hash);
     console.log(hash);
     var m ={
@@ -79,14 +83,14 @@
     var map = new mapboxgl.Map({
         container: 'map',
         // style: 'mapbox://styles/mapbox/light-v9',
-        style: 'mapbox://styles/tps23/cjggv0hzt001h2rlnzo7gy6rk',
+        // style: 'mapbox://styles/tps23/cjggv0hzt001h2rlnzo7gy6rk', // WY z10=>20
+        style: 'mapbox://styles/tps23/cjgntk6hs00052rppdqnkmi71', // PA z12
         zoom: m.zoom,
         center: m.center
     });
     map.on('load', onLoad);
-    map.on('zoomend', onZoomend);
     map.on('moveend', onMoveend);
-    var householdAsCircleId = 'household-as-circle';
+    map.on('zoomend', function(){ console.log('Zoom=' + map.getZoom()) });
 
     function addSource(id, url) {
         map.addSource(id, {
@@ -96,7 +100,6 @@
     }
 
     function loadHousehold() {
-        var labelId = 'household-persons';
         var bbox = map.getBounds();
         var csv = toCsv(bbox);
         var url = CONTEXT + '/households/api/bbox/' + csv;
@@ -104,22 +107,36 @@
         var id = 'households';
         var source = map.getSource(id);
         if (source) {
-            var circleLayer = map.getLayer(householdAsCircleId);
+            var circleLayer = map.getLayer(circleId);
             if (circleLayer)
-                map.removeLayer(householdAsCircleId);
+                map.removeLayer(circleId);
             var labelLayer = map.getLayer(labelId);
             if (labelLayer)
                 map.removeLayer(labelId);
             map.removeSource(id);
             addSource(id, url);
-            addCircleLayer(householdAsCircleId);
+            addCircleLayer(circleId);
             if (labelLayer)
                 addLabelLayer(labelId);
         } else {
             addSource(id, url);
-            addCircleLayer(householdAsCircleId);
+            addCircleLayer(circleId);
             addLabelLayer(labelId);
         }
+    }
+
+    function addLabelLayer(id) {
+        map.addLayer({
+            id: id,
+            type: 'symbol',
+            source: 'households',
+            minzoom: 18, //16, //17,// 18,
+            layout: {
+                'text-allow-overlap': true,
+                'text-field': '{persons}',
+                'text-offset': [0, 0]
+            }
+        });
     }
 
     function addCircleLayer(id) {
@@ -131,12 +148,47 @@
             paint: {
                 'circle-radius': {
                     base: 1.75,
-                    stops: [ [12, 2], [22, 50] ]
+                    // stops: [ [12, 1.75], [22, 1.75] ]
+                    // stops: [ [12, 2], [22, 120] ] // 16
+                    // stops: [ [12, 2], [22, 100] ] // 17
+                    stops: [ [12, 2], [22, 50] ] // 18
                 },
-                'circle-color': 'red'// 'orange'
+                'circle-color': 'orange' //'red'
             },
             filter: ['==', '$type', 'Point']
         });
+
+        map.on('click', id, function (e) {
+            var coordinates = e.features[0].geometry.coordinates.slice();
+            // Ensure that if the map is zoomed out such that multiple
+            // copies of the feature are visible, the popup appears
+            // over the copy being pointed to.
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+            new mapboxgl.Popup()
+                .setLngLat(coordinates)
+                .setHTML(html(e))
+                .addTo(map);
+        });
+        map.on('mouseenter', id, function () {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+        map.on('mouseleave', id, function () {
+            map.getCanvas().style.cursor = '';
+        });
+
+        function html(e) {
+            var obj = e.features[0].properties;
+            // return JSON.stringify(obj);
+            var html = '';
+            for (var k in obj) {
+                if (obj.hasOwnProperty(k)) {
+                    html += ' <b>' + k + '</b>:' + obj[k];
+                }
+            }
+            return html;
+        }
     }
 
     function onLoad() {
@@ -148,25 +200,6 @@
         if (map.autoLoadHousehold) {
             loadHousehold();
         }
-    }
-
-    function addLabelLayer(id) {
-        map.addLayer({
-            id: id,
-            type: 'symbol',
-            source: 'households',
-            minzoom: 18,
-            layout: {
-                'text-allow-overlap': true,
-                'text-offset': [0, 0],
-                'text-field': '{persons}'
-            }
-        });
-    }
-
-    function onZoomend() {
-        var zoom = map.getZoom();
-        console.log('Zoom=' + zoom);
     }
 
     function toCsv(bbox) {
@@ -182,7 +215,7 @@
             .split("&")
             .map( el => el.split("=") )
     .reduce( (pre, cur) => {
-            pre[cur[0]] = cur[1];
+                    pre[cur[0]] = cur[1];
         return pre; }
     , {} );
 
@@ -190,7 +223,7 @@
     }
 
     function toCenter(hash) {
-        text = hash['center'];
+        var text = hash['center'];
         if (text && text.includes(",")){
             tokens = text.split(",");
             return [tokens[0].valueOf(), tokens[1].valueOf()];
@@ -199,7 +232,7 @@
     }
 
     function toNumber(hash, key) {
-        text = hash[key];
+        var text = hash[key];
         if (text){
             var value = text.valueOf();
             var maxValue = 325e4; // 35e5 = crash
@@ -224,15 +257,15 @@
         var visibility = map.autoLoadHousehold;
         map.autoLoadHousehold = !map.autoLoadHousehold;
         onMoveend();
-        onZoomend();
-
-        var clickedLayer = householdAsCircleId;
-        if (visibility === true) {
-            map.setLayoutProperty(clickedLayer, 'visibility', 'none');
-            this.className = '';
-        } else {
-            this.className = 'active';
-            map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+        for (var i = 0; i < layerIds.length; i++) {
+            var id = layerIds[i];
+            if (visibility === true) {
+                map.setLayoutProperty(id, 'visibility', 'none');
+                this.className = '';
+            } else {
+                this.className = 'active';
+                map.setLayoutProperty(id, 'visibility', 'visible');
+            }
         }
     };
 
