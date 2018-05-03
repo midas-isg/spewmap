@@ -64,9 +64,6 @@
 
 <script th:inline="javascript">
     /*<![CDATA[*/
-    // WY: #center=-107.2903,43.0760&zoom=7&limit=700000
-    // Pgh: #center=-80.0,40.45&zoom=11&limit=600000
-    // AK: #center=-149.4937,64.2008&zoom=4&limit=300000
     var CONTEXT = '/spewmap';
     var baseUrl = CONTEXT + '/households/api/bbox/';
     var sourceId = 'households';
@@ -83,8 +80,8 @@
     console.log(hash);
     var m ={
         limit: toNumber(hash, 'limit') || 500000,
-        center: toCenter(hash) || [-149.4937, 64.2008], // AK //[-80.0, 40.45] // PGH
-        zoom: toNumber(hash, 'zoom') || 18
+        center: toCenter(hash) || [-107, 43], // USA [-149.4937, 64.2008], // AK //[-80.0, 40.45] // PGH
+        zoom: toNumber(hash, 'zoom') || 3
     };
     console.log(m);
 
@@ -92,8 +89,8 @@
     var map = new mapboxgl.Map({
         container: 'map',
         // style: 'mapbox://styles/mapbox/light-v9',
-        style: 'mapbox://styles/tps23/cjggv0hzt001h2rlnzo7gy6rk', // WY z10=>20
-        // style: 'mapbox://styles/tps23/cjgntk6hs00052rppdqnkmi71', // PA z12
+        // style: 'mapbox://styles/tps23/cjggv0hzt001h2rlnzo7gy6rk', // WY z10=>20
+        style: 'mapbox://styles/tps23/cjgntk6hs00052rppdqnkmi71', // PA z12=>16
         zoom: m.zoom,
         center: m.center
     });
@@ -116,7 +113,7 @@
             id: id,
             type: 'symbol',
             source: sourceId,
-            minzoom: 18, //16, //17,// 18,
+            minzoom: 19, //18, //16, //17,// 18,
             layout: {
                 'text-allow-overlap': true,
                 'text-field': '{persons}',
