@@ -57,7 +57,7 @@
 <body>
 
 <div id='map'></div>
-<nav id="menu"></nav>
+<!--<nav id="menu"></nav>-->
 
 <script src='//api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
 <script src='//cdnjs.cloudflare.com/ajax/libs/rxjs/5.5.10/Rx.min.js'></script>
@@ -70,6 +70,11 @@
     var circleId = 'household-as-circle';
     var labelId = 'household-persons';
     var layerIds = [circleId, labelId];
+    var subject = new Rx.Subject();
+    var prelenderStyle = 'mapbox://styles/tps23/cjgntk6hs00052rppdqnkmi71';// PA z12=>16
+    // var prelenderStyle = 'mapbox://styles/tps23/cjggv0hzt001h2rlnzo7gy6rk';// WY z10=>20
+    // var prelenderStyle = 'mapbox://styles/mapbox/light-v9';
+
     var emptyGeoJson = {
         type: 'FeatureCollection',
         features:[],
@@ -80,7 +85,7 @@
     console.log(hash);
     var m ={
         limit: toNumber(hash, 'limit') || 500000,
-        center: toCenter(hash) || [-107, 43], // USA [-149.4937, 64.2008], // AK //[-80.0, 40.45] // PGH
+        center: toCenter(hash) || [-107, 43], // USA
         zoom: toNumber(hash, 'zoom') || 3
     };
     console.log(m);
@@ -88,24 +93,26 @@
     mapboxgl.accessToken = 'pk.eyJ1Ijoic2FoYXd1dDB5YWhvbyIsImEiOiJjamdjcnRlNmVhMm52MndudnBzcGYxMXM2In0.tunR_ko7G4z0bqKefTs-pw';
     var map = new mapboxgl.Map({
         container: 'map',
-        // style: 'mapbox://styles/mapbox/light-v9',
-        // style: 'mapbox://styles/tps23/cjggv0hzt001h2rlnzo7gy6rk', // WY z10=>20
-        style: 'mapbox://styles/tps23/cjgntk6hs00052rppdqnkmi71', // PA z12=>16
+        style: prelenderStyle,
         zoom: m.zoom,
         center: m.center
     });
     map.on('load', onLoad);
-    map.on('zoomend', function(){
-        console.log('zoom=' + map.getZoom() + '; bbox='+ JSON.stringify(map.getBounds()));
-    });
+    map.on('zoomend', onZoomend);
 
     function onLoad() {
         map.autoLoadHousehold = false;
         addSource(sourceId);
         addCircleLayer(circleId);
         addLabelLayer(labelId);
-        var subject = initRx();
-        addMenu(subject);
+        initRx(subject);
+    }
+
+    function onZoomend(){
+        var theZoom = 16;
+        var zoom = map.getZoom();
+        swithToInteractiveMode(zoom >= theZoom);
+        console.log('zoom=' + zoom + '; bbox='+ JSON.stringify(map.getBounds()));
     }
 
     function addLabelLayer(id) {
@@ -131,12 +138,9 @@
             paint: {
                 'circle-radius': {
                     base: 1.75,
-                    // stops: [ [12, 1.75], [22, 1.75] ]
-                    // stops: [ [12, 2], [22, 120] ] // 16
-                    // stops: [ [12, 2], [22, 100] ] // 17
-                    stops: [ [12, 2], [22, 50] ] // 18
+                    stops: [ [16, 2], [22, 40] ]
                 },
-                'circle-color': 'orange' //'red'
+                'circle-color': 'red' //'orange' //'red'
             },
             filter: ['==', '$type', 'Point']
         });
@@ -173,7 +177,6 @@
     }
 
     function initRx() {
-        var subject = new Rx.Subject();
         var mapMoveend = Rx.Observable.fromEvent(map, 'moveend')
             .map(function(event){
                 return map.getBounds();
@@ -197,7 +200,6 @@
                 console.log('# of houses = ' + geojson.features.length
                     + ' ' + JSON.stringify(geojson.properties));
             });
-        return subject;
     }
 
     function addSource(id) {
@@ -248,33 +250,22 @@
         return null;
     }
 
-    function addMenu(subject) {
-        var link = document.createElement('a');
-        link.href = '#';
-        link.className = '';
-        link.textContent = "Interactive";
-
-        link.onclick = function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            var visibility = map.autoLoadHousehold;
-            map.autoLoadHousehold = !map.autoLoadHousehold;
-            for (var i = 0; i < layerIds.length; i++) {
-                var id = layerIds[i];
-                if (visibility === true) {
-                    map.setLayoutProperty(id, 'visibility', 'none');
-                    this.className = '';
-                } else {
-                    subject.next(map.getBounds());
-                    this.className = 'active';
-                    map.setLayoutProperty(id, 'visibility', 'visible');
-                }
+    function swithToInteractiveMode(flag){
+        if (map.autoLoadHousehold === flag)
+            return;
+        map.autoLoadHousehold = flag;
+        for (var i = 0; i < layerIds.length; i++) {
+            var id = layerIds[i];
+            if (flag === false) {
+                map.setLayoutProperty(id, 'visibility', 'none');
+                this.className = '';
+            } else {
+                subject.next(map.getBounds());
+                this.className = 'active';
+                map.setLayoutProperty(id, 'visibility', 'visible');
             }
-        };
+        }
 
-        var layers = document.getElementById('menu');
-        layers.appendChild(link);
     }
 
     function getWithCancel(url, token) { // the token is for cancellation
