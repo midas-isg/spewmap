@@ -6,6 +6,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import edu.pitt.isg.spewmap.geom.Properties;
 import lombok.Data;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -21,7 +22,8 @@ public class Household implements Properties {
     private String puma;
     private Integer persons;
     /** Total income */
-    private Integer inctot;
+    @Column(name = "inctot")
+    private Integer income;
     private String hid;
     private Geometry point;
 }

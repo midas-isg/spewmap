@@ -58,7 +58,7 @@ public class SpewmapApplicationTests {
 
 	private void assertValidHousehold(Household household) {
 		assertThat(household.getId()).isPositive();
-		assertThat(household.getInctot()).isPositive();
+		assertThat(household.getIncome()).isPositive();
 		assertThat(household.getPersons()).isPositive();
 		assertThat(household.getHid()).isNotBlank();
 		assertThat(household.getPoint()).isNotNull();
