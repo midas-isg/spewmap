@@ -10,7 +10,7 @@
         body { margin:0; padding:0; }
         #map { position:absolute; top:0; bottom:0; width:100%; }
 
-        #menu {
+        /*#menu {
             background: #fff;
             position: absolute;
             z-index: 1;
@@ -50,28 +50,74 @@
 
         #menu a.active:hover {
             background: #3074a4;
+        }*/
+
+        /* features */
+        #features {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 300px;
+            overflow: auto;
+            background: rgba(255, 255, 255, 0.8);
         }
 
+        /* Show drawn polygon area */
+        .calculation-box {
+            height: 75px;
+            width: 150px;
+            position: absolute;
+            bottom: 40px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, .9);
+            padding: 15px;
+            text-align: center;
+        }
+
+        p {
+            /*font-family: 'Open Sans';*/
+            margin: 0;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
 
 <div id='map'></div>
 <!--<nav id="menu"></nav>-->
+<pre id='features'></pre>
+<div class='calculation-box'>
+    <p>Draw a polygon using the draw tools to query.</p>
+    <div id='calculated-area'></div>
+    <p style="position:absolute;right:0;bottom:0;"><b>Zoom</b> = <span id='zoom-level'></span></p>
+</div>
 
 <script src='//api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
 <script src='//cdnjs.cloudflare.com/ajax/libs/rxjs/5.5.10/Rx.min.js'></script>
+<script src='https://api.tiles.mapbox.com/mapbox.js/plugins/turf/v3.0.11/turf.min.js'></script>
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.0/mapbox-gl-draw.js'></script>
+<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.0/mapbox-gl-draw.css' type='text/css'/>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
-    var CONTEXT = '/spewmap';
-    var baseUrl = CONTEXT + '/households/api/bbox/';
+    var CONTEXT = '/spewmap/households/api';
+    var baseUrl = CONTEXT + '/bbox/';
     var sourceId = 'households';
     var circleId = 'household-as-circle';
     var labelId = 'household-persons';
     var layerIds = [circleId, labelId];
     var subject = new Rx.Subject();
-    var prelenderStyle = 'mapbox://styles/tps23/cjgntk6hs00052rppdqnkmi71';// PA z12=>16
+    // var prelenderStyle = 'mapbox://styles/tps23/cjgsfqofv00002qs824xxduyw'; //pa_d16_z16 (density 16, zoom 16) // OK
+    // var prelenderStyle = 'mapbox://styles/tps23/cjgsfy5nk000q2rqsgtlg3b8u'; //pa_d18_z14 (density 18, zoom 14) // OK
+    // var prelenderStyle  = 'mapbox://styles/tps23/cjgwlt85x00082rtcohcwhqv8'; //wy (density 18, max zoom 14)
+    // var prelenderStyle  = 'mapbox://styles/tps23/cjgwlzq0c00092sp5d7r6o2bi'; //wy_pa (density 18, max zoom 14)
+    var prelenderStyle = 'mapbox://styles/tps23/cjgwnskl4000k2sn55fcmtqmx'; //AL-CA-FL-HA-MA (density 18, max zoom 14)
+
+    // var prelenderStyle = 'mapbox://styles/tps23/cjgntk6hs00052rppdqnkmi71'; // PA z12=>16 // Unknow
+    // var prelenderStyle = 'mapbox://styles/tps23/cjgwda555000o2rmjoc17f1bs'; //pa_default (zoom 14, density ?)
+    // var prelenderStyle = 'mapbox://styles/tps23/cjgsfxlmp00092rl73pk74fek'; //pa_z18 (density ?) //Zoome=3 too many drops
+    // var prelenderStyle = 'mapbox://styles/tps23/cjgsg01fw00142rnkk4hz7bu5'; //pa_d20_z8 (density 20, zoom 8) // Zoom=13 too many drops
     // var prelenderStyle = 'mapbox://styles/tps23/cjggv0hzt001h2rlnzo7gy6rk';// WY z10=>20
     // var prelenderStyle = 'mapbox://styles/mapbox/light-v9';
 
@@ -84,7 +130,7 @@
     var hash = toDict(location.hash);
     console.log(hash);
     var m ={
-        limit: toNumber(hash, 'limit') || 500000,
+        limit: toNumber(hash, 'limit') || 50000000,
         center: toCenter(hash) || [-107, 43], // USA
         zoom: toNumber(hash, 'zoom') || 3
     };
@@ -99,6 +145,48 @@
     });
     map.on('load', onLoad);
     map.on('zoomend', onZoomend);
+    /*map.on('mousemove', function (e) {
+        var features = map.queryRenderedFeatures(e.point);
+        document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
+    });*/
+    var draw = new MapboxDraw({
+        displayControlsDefault: false,
+        controls: {
+            polygon: true,
+            trash: true
+        }
+    });
+    map.addControl(draw, 'bottom-left');
+
+    map.on('draw.create', updateArea);
+    map.on('draw.delete', updateArea);
+    map.on('draw.update', updateArea);
+
+    function updateArea(e) {
+        var featureCollection = draw.getAll();
+        var answer = document.getElementById('calculated-area');
+        if (featureCollection.features.length > 0) {
+            var area = turf.area(featureCollection);
+            // restrict to area to 2 decimal points
+            var rounded_area = Math.round(area*100)/100;
+            answer.innerHTML = '<p><strong>' + rounded_area + '</strong></p><p>square meters</p>';
+            //+ '<p><p>geometry</p><strong>' + JSON.stringify(data.features[0].geometry) + '</strong></p>';
+            var token = {cancel: function(){}};
+            var url = CONTEXT + '/summarize';
+            var features = document.getElementById('features');
+            var combined = turf.combine(featureCollection);
+            var geometry = combined.features[0].geometry;
+            features.innerHTML = "<b>Please wait...</b> <br/> <br/>Loading with the below query: <br/>" + JSON.stringify(geometry, null, 1);
+            Rx.Observable.fromPromise(postWithCancel(url, token, geometry))
+                .subscribe(function (response){
+                    console.log(response);
+                    features.innerHTML = "<b>Result of the querying polgon(s):</b><br/>" + JSON.stringify(JSON.parse(response), null, 2);
+                });
+        } else {
+            answer.innerHTML = '';
+            if (e.type !== 'draw.delete') alert("Use the draw tools to draw a polygon!");
+        }
+    }
 
     function onLoad() {
         map.autoLoadHousehold = false;
@@ -113,6 +201,8 @@
         var zoom = map.getZoom();
         swithToInteractiveMode(zoom >= theZoom);
         console.log('zoom=' + zoom + '; bbox='+ JSON.stringify(map.getBounds()));
+        var zoomLabel = document.getElementById('zoom-level');
+        zoomLabel.innerHTML = zoom.toFixed(5);
     }
 
     function addLabelLayer(id) {
@@ -122,6 +212,7 @@
             source: sourceId,
             minzoom: 19, //18, //16, //17,// 18,
             layout: {
+                // 'icon-image': 'monument-15', // https://github.com/mapbox/mapbox-gl-styles#standard-icons
                 'text-allow-overlap': true,
                 'text-field': '{persons}',
                 'text-offset': [0, 0]
@@ -268,10 +359,14 @@
 
     }
 
-    function getWithCancel(url, token) { // the token is for cancellation
+    function requestWithCancel(method, url, token, body) {
         var request = new XMLHttpRequest();
-        request.open("GET", url);
-        request.send();
+        request.open(method, url);
+        if (body){
+            request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            body = JSON.stringify(body);
+        }
+        request.send(body);
         return new Promise(
             function (resolve, reject) {
                 request.onload = function () {
@@ -285,6 +380,15 @@
             }
         );
     }
+
+    function getWithCancel(url, token) { // the token is for cancellation
+        return requestWithCancel("GET", url, token);
+    }
+
+    function postWithCancel(url, token, body) { // the token is for cancellation
+        return requestWithCancel("POST", url, token, body);
+    }
+
     /*]]>*/
 </script>
 

@@ -18,15 +18,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 
 import static edu.pitt.isg.spewmap.geom.GeometryAid.GEOJSON;
+import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -73,9 +77,38 @@ public class HouseholdController {
         final Feature feature = toFeature(all);
         final PropertyMap properties = (PropertyMap) feature.getProperties();
         properties.put("querySummary", querySummary);
-
-        log.info("Returned object");
         return feature;
+    }
+
+    @PostMapping("/api/summarize")
+    public Object summarize(@RequestBody Geometry geometry){
+        log.info("summarizing " + geometry + " ...");
+        final List<Household> households = repo.findWithinGeometry(geometry, null).getContent();
+        log.info("summarized # Points: " + households.size());
+        return stat(households);
+    }
+
+    private Map<String, Object> stat(List<Household> households) {
+        final Map<String, Object> map = new HashMap<>();
+        final int[] persons = households.stream()
+                .map(Household::getPersons)
+                .mapToInt(Integer::intValue).toArray();
+        final int[] incomes = households.stream()
+                .map(Household::getIncome)
+                .mapToInt(Integer::intValue).toArray();
+        map.put("households", households.size());
+        map.put("persons", basicStat(persons));
+        map.put("income", basicStat(incomes));
+        return map;
+    }
+
+    private Map<String, Object> basicStat(int[] persons) {
+        final Map<String, Object> map = new HashMap<>();
+        map.put("sum", stream(persons).sum());
+        map.put("average", stream(persons).average());
+        map.put("max", stream(persons).max());
+        map.put("min", stream(persons).min());
+        return map;
     }
 
     @GetMapping("/api" + BBOX)
