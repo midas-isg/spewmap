@@ -27,12 +27,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.stream.Stream;
+import java.util.Objects;
+import java.util.function.Function;
 
 import static edu.pitt.isg.spewmap.geom.GeometryAid.GEOJSON;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
 
 
 @RestController
@@ -85,29 +85,36 @@ public class HouseholdController {
         log.info("summarizing " + geometry + " ...");
         final List<Household> households = repo.findWithinGeometry(geometry, null).getContent();
         log.info("summarized # Points: " + households.size());
-        return stat(households);
+        final Map<String, Object> stat = stat(households);
+        log.info("summarized finished.");
+        return stat;
     }
 
     private Map<String, Object> stat(List<Household> households) {
         final Map<String, Object> map = new HashMap<>();
-        final int[] persons = households.stream()
-                .map(Household::getPersons)
-                .mapToInt(Integer::intValue).toArray();
-        final int[] incomes = households.stream()
-                .map(Household::getIncome)
-                .mapToInt(Integer::intValue).toArray();
+        final int[] persons = toIntArray(households, Household::getPersons);
+        final int[] incomes = toIntArray(households, Household::getIncome);
         map.put("households", households.size());
         map.put("persons", basicStat(persons));
         map.put("income", basicStat(incomes));
         return map;
     }
 
-    private Map<String, Object> basicStat(int[] persons) {
+    private int[] toIntArray(List<Household> households,
+                             Function<Household, Integer> intFunction) {
+        return households.stream()
+                    .map(intFunction)
+                    .filter(Objects::nonNull)
+                    .mapToInt(Integer::intValue).toArray();
+    }
+
+    private Map<String, Object> basicStat(int[] ints) {
         final Map<String, Object> map = new HashMap<>();
-        map.put("sum", stream(persons).sum());
-        map.put("average", stream(persons).average());
-        map.put("max", stream(persons).max());
-        map.put("min", stream(persons).min());
+        map.put("sum", stream(ints).sum());
+        map.put("average", stream(ints).average());
+        map.put("max", stream(ints).max());
+        map.put("min", stream(ints).min());
+        map.put("count", ints.length);
         return map;
     }
 

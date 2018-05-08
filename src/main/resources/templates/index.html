@@ -112,7 +112,9 @@
     // var prelenderStyle = 'mapbox://styles/tps23/cjgsfy5nk000q2rqsgtlg3b8u'; //pa_d18_z14 (density 18, zoom 14) // OK
     // var prelenderStyle  = 'mapbox://styles/tps23/cjgwlt85x00082rtcohcwhqv8'; //wy (density 18, max zoom 14)
     // var prelenderStyle  = 'mapbox://styles/tps23/cjgwlzq0c00092sp5d7r6o2bi'; //wy_pa (density 18, max zoom 14)
-    var prelenderStyle = 'mapbox://styles/tps23/cjgwnskl4000k2sn55fcmtqmx'; //AL-CA-FL-HA-MA (density 18, max zoom 14)
+    // var prelenderStyle = 'mapbox://styles/tps23/cjgwnskl4000k2sn55fcmtqmx'; //multilayer AL-AK-CA-FL-HA-MA-PA-WY(density 18, max zoom 14)
+    var prelenderStyle = 'mapbox://styles/tps23/cjgxy3w95001b2sr3lveze2kq'; //single layer AL-AK-CA-FL-HA-MA-PA-WY(density 18, max zoom 14)
+
 
     // var prelenderStyle = 'mapbox://styles/tps23/cjgntk6hs00052rppdqnkmi71'; // PA z12=>16 // Unknow
     // var prelenderStyle = 'mapbox://styles/tps23/cjgwda555000o2rmjoc17f1bs'; //pa_default (zoom 14, density ?)
@@ -197,7 +199,7 @@
     }
 
     function onZoomend(){
-        var theZoom = 16;
+        var theZoom = 16; //10;//12;// 16;
         var zoom = map.getZoom();
         swithToInteractiveMode(zoom >= theZoom);
         console.log('zoom=' + zoom + '; bbox='+ JSON.stringify(map.getBounds()));
