@@ -107,6 +107,7 @@
     var circleId = 'household-as-circle';
     var labelId = 'household-persons';
     var layerIds = [circleId, labelId];
+    var tokenForSummary = {cancel: function(){}};
     var subject = new Rx.Subject();
     // var prelenderStyle = 'mapbox://styles/tps23/cjgsfqofv00002qs824xxduyw'; //pa_d16_z16 (density 16, zoom 16) // OK
     // var prelenderStyle = 'mapbox://styles/tps23/cjgsfy5nk000q2rqsgtlg3b8u'; //pa_d18_z14 (density 18, zoom 14) // OK
@@ -114,7 +115,7 @@
     // var prelenderStyle  = 'mapbox://styles/tps23/cjgwlzq0c00092sp5d7r6o2bi'; //wy_pa (density 18, max zoom 14)
     // var prelenderStyle = 'mapbox://styles/tps23/cjgwnskl4000k2sn55fcmtqmx'; //multilayer AL-AK-CA-FL-HA-MA-PA-WY(density 18, max zoom 14)
     var prelenderStyle = 'mapbox://styles/tps23/cjgxy3w95001b2sr3lveze2kq'; //single layer AL-AK-CA-FL-HA-MA-PA-WY(density 18, max zoom 14)
-
+    // var prelenderStyle ='mapbox://styles/tps23/cjgy0n09l00002tr2cxg5deu7'; //sierra leone (density 18, max zoom 14)
 
     // var prelenderStyle = 'mapbox://styles/tps23/cjgntk6hs00052rppdqnkmi71'; // PA z12=>16 // Unknow
     // var prelenderStyle = 'mapbox://styles/tps23/cjgwda555000o2rmjoc17f1bs'; //pa_default (zoom 14, density ?)
@@ -148,16 +149,10 @@
     map.on('load', onLoad);
     map.on('zoomend', onZoomend);
     /*map.on('mousemove', function (e) {
-        var features = map.queryRenderedFeatures(e.point);
-        document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
-    });*/
-    var draw = new MapboxDraw({
-        displayControlsDefault: false,
-        controls: {
-            polygon: true,
-            trash: true
-        }
-    });
+            var features = map.queryRenderedFeatures(e.point);
+            document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
+        });*/
+    var draw = newMapboxDraw();
     map.addControl(draw, 'bottom-left');
 
     map.on('draw.create', updateArea);
@@ -172,14 +167,13 @@
             // restrict to area to 2 decimal points
             var rounded_area = Math.round(area*100)/100;
             answer.innerHTML = '<p><strong>' + rounded_area + '</strong></p><p>square meters</p>';
-            //+ '<p><p>geometry</p><strong>' + JSON.stringify(data.features[0].geometry) + '</strong></p>';
-            var token = {cancel: function(){}};
             var url = CONTEXT + '/summarize';
             var features = document.getElementById('features');
             var combined = turf.combine(featureCollection);
             var geometry = combined.features[0].geometry;
             features.innerHTML = "<b>Please wait...</b> <br/> <br/>Loading with the below query: <br/>" + JSON.stringify(geometry, null, 1);
-            Rx.Observable.fromPromise(postWithCancel(url, token, geometry))
+            tokenForSummary.cancel();
+            Rx.Observable.fromPromise(postWithCancel(url, tokenForSummary, geometry))
                 .subscribe(function (response){
                     console.log(response);
                     features.innerHTML = "<b>Result of the querying polgon(s):</b><br/>" + JSON.stringify(JSON.parse(response), null, 2);
@@ -299,6 +293,120 @@
         map.addSource(id, {
             type: 'geojson',
             data: emptyGeoJson
+        });
+    }
+
+    function newMapboxDraw() {
+        var color1 = '#D20C0C';
+        var color2 = '#000';
+        var color3 = '#FFF';
+
+        var lineStokeActive = {
+            id: 'gl-draw-line',
+            type: 'line',
+            filter: ['all', ['==', '$type', 'LineString'], ['!=', 'mode', 'static']],
+            layout: {
+                'line-cap': 'round',
+                'line-join': 'round'
+            },
+            paint: {
+                'line-color': color1,
+                'line-dasharray': [0.2, 2],
+                'line-width': 2
+            }
+        }, polygonFillActive = {
+            id: 'gl-draw-polygon-fill',
+            type: 'fill',
+            filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
+            paint: {
+                'fill-color': color1,
+                'fill-outline-color': color1,
+                'fill-opacity': 0.1
+            }
+        }, polygonOutlineActive = {
+            // This doesn't style the first edge of the polygon, which uses the line stroke styling instead
+            id: 'gl-draw-polygon-stroke-active',
+            type: 'line',
+            filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
+            layout: {
+                'line-cap': 'round',
+                'line-join': 'round'
+            },
+            paint: {
+                'line-color': color1,
+                'line-dasharray': [0.2, 2],
+                'line-width': 2
+            }
+        }, vertexPointHalosActive = {
+            id: 'gl-draw-polygon-and-line-vertex-halo-active',
+            type: 'circle',
+            filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
+            paint: {
+                'circle-radius': 5,
+                'circle-color': color3
+            }
+        }, vertexPointsActive = {
+            id: 'gl-draw-polygon-and-line-vertex-active',
+            type: 'circle',
+            filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
+            paint: {
+                'circle-radius': 3,
+                'circle-color': color1
+            }
+        };
+        var lineStokeInactive = {
+            id: 'gl-draw-line-static',
+            type: 'line',
+            filter: ['all', ['==', '$type', 'LineString'], ['==', 'mode', 'static']],
+            layout: {
+                'line-cap': 'round',
+                'line-join': 'round'
+            },
+            paint: {
+                'line-color': color2,
+                'line-width': 3
+            }
+        }, polygonFillInactive = {
+            id: 'gl-draw-polygon-fill-static',
+            type: 'fill',
+            filter: ['all', ['==', '$type', 'Polygon'], ['==', 'mode', 'static']],
+            paint: {
+                'fill-color': color2,
+                'fill-outline-color': color2,
+                'fill-opacity': 0.1
+            }
+        }, polygonOutlineInactive = {
+            id: 'gl-draw-polygon-stroke-static',
+            type: 'line',
+            filter: ['all', ['==', '$type', 'Polygon'], ['==', 'mode', 'static']],
+            layout: {
+                'line-cap': 'round',
+                'line-join': 'round'
+            },
+            paint: {
+                'line-color': color2,
+                'line-width': 3
+            }
+        };
+
+        return new MapboxDraw({
+            displayControlsDefault: false,
+            styles: [
+                // ACTIVE (being drawn)
+                lineStokeActive,
+                polygonFillActive,
+                polygonOutlineActive,
+                vertexPointHalosActive,
+                vertexPointsActive,
+                // INACTIVE (static, already drawn)
+                lineStokeInactive,
+                polygonFillInactive,
+                polygonOutlineInactive
+            ],
+            controls: {
+                polygon: true,
+                trash: true
+            }
         });
     }
 
