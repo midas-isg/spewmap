@@ -65,14 +65,17 @@
 
         /* Show drawn polygon area */
         .calculation-box {
-            height: 75px;
-            width: 150px;
+            height: fit-content;
+            width: fit-content;
             position: absolute;
-            bottom: 40px;
-            left: 10px;
-            background-color: rgba(255, 255, 255, .9);
-            padding: 15px;
-            text-align: center;
+            margin-left: 100px;
+            margin-bottom: 10px;
+            bottom: 0px;
+            left: 0px;
+            background-color: rgba(255, 255, 255, .8);
+            padding: 0px;
+            transform: translate(0%, 0%);
+            /*text-align: center;*/
         }
 
         p {
@@ -86,11 +89,11 @@
 
 <div id='map'></div>
 <!--<nav id="menu"></nav>-->
-<pre id='features'></pre>
+<pre id='features' style="display: none"></pre>
 <div class='calculation-box'>
-    <p>Draw a polygon using the draw tools to query.</p>
-    <div id='calculated-area'></div>
-    <p style="position:absolute;right:0;bottom:0;"><b>Zoom</b> = <span id='zoom-level'></span></p>
+    <!--<div style="position:absolute;right:0;bottom:0;padding-right:15px">-->
+    <span><b>Zoom</b> = <span id='zoom-level'> </span></span>
+    <span id='calculated-area'></span>
 </div>
 
 <script src='//api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
@@ -154,22 +157,23 @@
             document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
         });*/
     var draw = newMapboxDraw();
-    map.addControl(draw, 'bottom-left');
+    map.addControl(draw, 'top-left');
 
     map.on('draw.create', updateArea);
     map.on('draw.delete', updateArea);
     map.on('draw.update', updateArea);
 
     function updateArea(e) {
+        var features = document.getElementById('features');
         var featureCollection = draw.getAll();
         var answer = document.getElementById('calculated-area');
         if (featureCollection.features.length > 0) {
+            features.style.display = "block";
             var area = turf.area(featureCollection);
             // restrict to area to 2 decimal points
             var rounded_area = Math.round(area*100)/100;
-            answer.innerHTML = '<p><strong>' + rounded_area + '</strong></p><p>square meters</p>';
+            answer.innerHTML = '<span> The area of your polygon(s) is <strong>' + rounded_area + '</strong> square meters</span>';
             var url = CONTEXT + '/summarize';
-            var features = document.getElementById('features');
             var combined = turf.combine(featureCollection);
             var geometry = combined.features[0].geometry;
             features.innerHTML = "<b>Please wait...</b> <br/> <br/>Loading with the below query: <br/>" + JSON.stringify(geometry, null, 1);
@@ -181,7 +185,15 @@
                 });
         } else {
             answer.innerHTML = '';
+            features.style.display = "none";
             if (e.type !== 'draw.delete') alert("Use the draw tools to draw a polygon!");
+        }
+    }
+
+    function changeTitle(classNames, title) {
+        var elements = document.getElementsByClassName(classNames);
+        if (elements) {
+            elements[0].setAttribute("title", title);
         }
     }
 
@@ -191,6 +203,9 @@
         addCircleLayer(circleId);
         addLabelLayer(labelId);
         initRx(subject);
+        onZoomend();
+        changeTitle('mapbox-gl-draw_polygon', "Draw a polygon to query.\n\nTo draw, click on this tool then click on the map.\nTo complete your polygon, click on the starting point.");
+        changeTitle('mapbox-gl-draw_trash', "Delete a drawn geometry e.g. polygon.\n\nTo delete, ensure that the drawn geometry is active and click on this tool.\nTo make a drawn geometry active, just click on it.");
     }
 
     function onZoomend(){
