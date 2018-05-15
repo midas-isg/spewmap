@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
+. /etc/profile.d/modules.sh
 ml maven/3.3.9
 ./start.sh
