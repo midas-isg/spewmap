@@ -62,6 +62,10 @@
             overflow: auto;
             background: rgba(255, 255, 255, 0.8);
         }
+        #map canvas {
+            /*cursor: crosshair; !* Get features under the mouse pointer *!*/
+        }
+
 
         /* Show drawn polygon area */
         .calculation-box {
@@ -89,6 +93,7 @@
 
 <div id='map'></div>
 <!--<nav id="menu"></nav>-->
+<!--<pre id='features'></pre> &lt;!&ndash;Get features under the mouse pointer&ndash;&gt;-->
 <pre id='features' style="display: none"></pre>
 <div class='calculation-box'>
     <!--<div style="position:absolute;right:0;bottom:0;padding-right:15px">-->
@@ -152,10 +157,10 @@
     });
     map.on('load', onLoad);
     map.on('zoomend', onZoomend);
-    /*map.on('mousemove', function (e) {
-            var features = map.queryRenderedFeatures(e.point);
-            document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
-        });*/
+    // map.on('mouseup', function (e) { // mousemove // Get features under the mouse pointer
+    //         var features = map.queryRenderedFeatures(e.point);
+    //         document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
+    //     });
     var draw = newMapboxDraw();
     map.addControl(draw, 'top-left');
 

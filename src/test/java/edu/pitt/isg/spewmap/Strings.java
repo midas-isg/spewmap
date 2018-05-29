@@ -9,7 +9,7 @@ public class Strings {
     public static final String householdUrl = "/households/";
     public static final String householdBboxUrl = householdUrl + "bbox/";
 
-    public static String urlHouseHold(long id) {
+    public static String urlHouseHold(String id) {
         return householdUrl + id;
     }
 

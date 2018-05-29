@@ -54,7 +54,7 @@ public class HouseholdControllerTests {
     @MockBean
     private HouseholdRepo mockRepo;
 
-    private final long ID = 0L;
+    private final String ID = "0L";
     private final String aHouseholdUrl = urlHouseHold(ID);
     private final String aBoxUrl = urlHouseHoldsByBox(emptyList()) + "0,0,0,0";
     private final double X = 1.;
@@ -155,9 +155,9 @@ public class HouseholdControllerTests {
         return fact.createPoint(coordinate);
     }
 
-    private Household newHousehold(long id) {
+    private Household newHousehold(String id) {
         final Household household = new Household();
-        household.setId(id);
+        household.setHid(id);
         return household;
     }
 }

@@ -31,14 +31,14 @@ public class SpewmapApplicationTests {
 
 	@Test
 	void validHousehold() {
-		final long id = 4353629L;
+		final String id = "4353629L";
 		final String validHouseHoldUrl = urlHouseHold(id);
 
 		final ResponseEntity<Household> res = getHousehold(validHouseHoldUrl);
 
 		assertThat(res.getStatusCode()).isEqualTo(OK);
 		final Household household = res.getBody();
-		assertThat(household.getId()).isEqualTo(id);
+		assertThat(household.getHid()).isEqualTo(id);
 		assertValidHousehold(household);
 	}
 
@@ -57,7 +57,7 @@ public class SpewmapApplicationTests {
 	}
 
 	private void assertValidHousehold(Household household) {
-		assertThat(household.getId()).isPositive();
+		assertThat(household.getHid()).isNotBlank();
 		assertThat(household.getIncome()).isPositive();
 		assertThat(household.getPersons()).isPositive();
 		assertThat(household.getHid()).isNotBlank();
