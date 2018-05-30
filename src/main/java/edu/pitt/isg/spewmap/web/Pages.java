@@ -7,8 +7,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @Controller
 public class Pages {
-    @GetMapping("/")
+    @GetMapping()
     public String index(){
         return "index";
+    }
+
+    @GetMapping("/map")
+    public String map(){
+        return "tile";
     }
 }

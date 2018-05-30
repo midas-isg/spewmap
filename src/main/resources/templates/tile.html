@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Add a third party vector tile source</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='//cdnjs.cloudflare.com/ajax/libs/rxjs/5.5.10/Rx.min.js'></script>
+
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.45.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.45.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/turf/v3.0.11/turf.min.js'></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.0/mapbox-gl-draw.js'></script>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.0/mapbox-gl-draw.css' type='text/css'/>
+    <style>
+        .person-legend {
+            height: fit-content;
+            width: fit-content;
+            position: absolute;
+            margin-bottom: 10px;
+            bottom: 25px;
+            left: 150px;
+            background-color: rgba(255, 255, 255, .8);
+            padding: 0px;
+            transform: translate(0%, 0%);
+            display: none;
+        }
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+        /* Show drawn polygon area */
+        .calculation-box {
+            height: fit-content;
+            width: fit-content;
+            position: absolute;
+            margin-left: 100px;
+            margin-bottom: 10px;
+            bottom: 0px;
+            left: 0px;
+            background-color: rgba(255, 255, 255, .8);
+            padding: 0px;
+            transform: translate(0%, 0%);
+            /*text-align: center;*/
+        }
+
+        /* features */
+        #features {
+            position: absolute;
+            top: 0;
+            right: 10px;
+            bottom: 10px;
+            width: 300px;
+            overflow: auto;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        #map canvas {
+            /*cursor: crosshair; !* Get features under the mouse pointer *!*/
+        }
+
+        /* https://www.mapbox.com/mapbox-gl-js/example/toggle-layers/ */
+        #menu {
+            background: #fff;
+            position: absolute;
+            z-index: 1;
+            bottom: 30px;
+            left: 10px;
+            border-radius: 3px;
+            width: 120px;
+            border: 1px solid rgba(0,0,0,0.4);
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        #menu a {
+            font-size: 13px;
+            color: #404040;
+            display: block;
+            margin: 0;
+            padding: 0;
+            padding: 10px;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(0,0,0,0.25);
+            text-align: center;
+        }
+
+        #menu a:last-child {
+            border: none;
+        }
+
+        #menu a:hover {
+            background-color: #f8f8f8;
+            color: #404040;
+        }
+
+        #menu a.active {
+            background-color: #3887be;
+            color: #ffffff;
+        }
+
+        #menu a.active:hover {
+            background: #3074a4;
+        }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+<nav id="menu"></nav>
+<pre id='features' style="display: none"></pre>
+<div class='calculation-box'>
+    <!--<div style="position:absolute;right:0;bottom:0;padding-right:15px">-->
+    <span><i>Note that: some points are dropped at zoom lower than 14! </i> </b><b>Current Zoom</b> = <span id='zoom-level'> </span></span>
+    <span id='calculated-area'></span>
+</div>
+<div class='person-legend'>
+    <div>Size (Occupant) Legend</div>
+    <table style="text-align: left; width: 150px;" border="0" cellpadding="2" cellspacing="2">
+        <tbody>
+        <tr>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(67, 2, 252);">&nbsp;</div></td>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(7, 221, 249);">&nbsp;</div></td>
+            <td width="30px"><div class="bubblecell" style="text-align: center; background-color: rgb(242, 201, 15);">&nbsp;</div></td>
+            <td width="30px"><div class="bubblecell" style="text-align: center; background-color: rgb(239, 20, 93);">&nbsp;</div></td>
+        </tr>
+        <tr>
+            <td class="legendtext" style="text-align: center;">1</td>
+            <td class="legendtext" style="text-align: center;">2</td>
+            <td class="legendtext" style="text-align: center;">3-4</td>
+            <td class="legendtext" style="text-align: center;">5+</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<!--<script src = "http://localhost:8001/basic_template/style.js"></script>-->
+<!--<script src = "http://localhost:8001/spewtiles/basic_template/style.js"></script>-->
+<script src = "http://betaweb.rods.pitt.edu/spewtiles/basic_template/style.js"></script>
+<script>
+    var CONTEXT = '/spewmap/households/api';
+    var tokenForSummary = {cancel: function(){}};
+    mapboxgl.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
+    var qs = queryString();
+    var map = new mapboxgl.Map({
+        style: 'mapbox://styles/mapbox/light-v9',
+        zoom: qs['zoom'] || 9, // 3,
+        center: toCenter(qs) || [-74.4714737, 40.4724525], // [-107,43], // USA
+        container: 'map'
+    });
+    map.on('load', onLoad);
+
+    function onLoad() {
+        var srcId = 'household-from-tile';
+        map.on('zoomend', onZoomend);
+        onZoomend();
+
+        addControls();
+        addSource(srcId);
+        addCircleLayers(srcId);
+        addTheLabelLayer(srcId);
+
+        function onZoomend(){
+            var zoom = map.getZoom();
+            console.log('zoom=' + zoom + '; bbox='+ JSON.stringify(map.getBounds()));
+            var zoomLabel = document.getElementById('zoom-level');
+            zoomLabel.innerHTML = zoom.toFixed(5);
+        }
+    }
+
+    function addSource(srcId) {
+        map.addSource(srcId, { // Add a third party vector tile source https://www.mapbox.com/mapbox-gl-js/example/third-party/
+            "type": "vector",
+            "tiles": ["http://betaweb.rods.pitt.edu/spewtiles/density_test/{z}/{x}/{y}.pbf"],
+            // "tiles": ["http://localhost:8001/spewtiles/density_test/{z}/{x}/{y}.pbf"],
+            "minzoom": 0,
+            "maxzoom": 14 //14
+        });
+    }
+
+    function addTheLabelLayer(srcId) {
+        map.addLayer({
+            id: 'label',
+            type: 'symbol',
+            "source": srcId,
+            "source-layer": "density_test",
+            minzoom: 19, //19
+            layout: {
+                'text-allow-overlap': true,
+                'text-field': '{persons}',
+                'text-offset': [0, 0]
+            }
+        });
+    }
+
+    function addCircleLayers(srcId) {
+        var hhPersonsId = 'Size (Occupants)';
+        var hhIncomeId = 'Income';
+        var hhId = 'Household';
+        var toggleableLayerIds = [hhPersonsId, hhIncomeId, hhId];
+
+        addPersonsTileLayer(hhPersonsId, srcId);
+        addIncomeTileLayer(hhIncomeId, srcId);
+        addHouseholdTileLayer(hhId, srcId);
+        makeCircleLayersToggleable();
+
+        function addIncomeTileLayer(id, srcId) {
+            var circleColor = [
+                'step',
+                ['get', 'income'],
+                'yellow', 25000,
+                '#fbb03b', 75000,
+                '#223b53', 125000,
+                '#e55e5e', 250000,
+                '#3bb2d0'
+            ];
+            addTileLayer(id, srcId, circleColor)
+        }
+
+        function addPersonsTileLayer(id, srcId) {
+            var circleColor = [
+                'match',
+                ['get', 'persons'],
+                1, rgb(67, 2, 252), // '#fbb03b',
+                2, rgb(7, 221, 249), //'#223b53',
+                3, rgb(242, 201, 15), //'#e55e5e',
+                4, rgb(242, 201, 15), //'#3bb2d0',
+                // 5, 'yellow',
+                // 6, 'green',
+                rgb(239, 20, 93) //'#ccc' // other
+            ];
+            addTileLayer(id, srcId, circleColor)
+        }
+
+        function addHouseholdTileLayer(id, srcId) {
+            addTileLayer(id, srcId, 'orange');
+        }
+
+        function addTileLayer(id, srcId, circleColor) {
+            map.addLayer({
+                'id': id,
+                'type': 'circle',
+                'source': srcId,
+                'source-layer': 'density_test',
+                paint: {
+                    'circle-radius': {
+                        base: 1.75,
+                        stops: [ [16, 2], [22, 40] ]
+                    },
+                    'circle-color': circleColor
+                }
+            }, 'waterway-label');
+            makeLayerClickable(id, srcId);
+        }
+
+        function makeLayerClickable(id, srcId) {
+            map.on('click', id, function (e) {
+                var coordinates = e.features[0].geometry.coordinates.slice();
+                // Ensure that if the map is zoomed out such that multiple
+                // copies of the feature are visible, the popup appears
+                // over the copy being pointed to.
+                while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                    coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+                }
+                new mapboxgl.Popup()
+                    .setLngLat(coordinates)
+                    .setHTML(html(e))
+                    .addTo(map);
+            });
+            map.on('mouseenter', id, function () {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+            map.on('mouseleave', id, function () {
+                map.getCanvas().style.cursor = '';
+            });
+
+            function html(e) {
+                var obj = e.features[0].properties;
+                var html = '';
+                for (var k in obj) {
+                    if (obj.hasOwnProperty(k))
+                        html += ' <b>' + k + '</b>:' + obj[k];
+                }
+                return html;
+            }
+        }
+
+        function makeCircleLayersToggleable() {
+            var id2link = {};
+            for (var i = 0; i < toggleableLayerIds.length; i++) {
+                var layerId = toggleableLayerIds[i];
+
+                var link = document.createElement('a');
+                link.href = '#';
+                link.textContent = layerId;
+                id2link[layerId] = link;
+                if (layerId !== hhId)
+                    hide.call(link, layerId);
+                else
+                    link.className = 'active';
+
+                link.onclick = function (e) {
+                    var clickedLayer = this.textContent;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var visibility = map.getLayoutProperty(clickedLayer, 'visibility');
+
+                    if (visibility === 'visible') {
+                        hide.call(this, clickedLayer);
+                    } else {
+                        for (var i = 0; i < toggleableLayerIds.length; i++) {
+                            var layer = toggleableLayerIds[i];
+                            hide.call(id2link[layer], layer);
+                        }
+                        this.className = 'active';
+                        map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+                    }
+                };
+                var layers = document.getElementById('menu');
+                layers.appendChild(link);
+            }
+
+            function hide(id) {
+                map.setLayoutProperty(id, 'visibility', 'none');
+                this.className = '';
+            }
+        }
+
+        function rgbToHex(rgb) {
+            var hex = Number(rgb).toString(16);
+            if (hex.length < 2) {
+                hex = '0' + hex;
+            }
+            return hex;
+        }
+
+        function rgb(r, g, b) {
+            var red = rgbToHex(r);
+            var green = rgbToHex(g);
+            var blue = rgbToHex(b);
+            return '#' + red + green + blue;
+        }
+    }
+
+    function addControls() {
+        map.addControl(new mapboxgl.NavigationControl(), 'top-left');
+        var draw = newMapboxDraw();
+        map.addControl(draw, 'top-left');
+        map.on('draw.create', updateQueryResult);
+        map.on('draw.delete', updateQueryResult);
+        map.on('draw.update', updateQueryResult);
+
+        function updateQueryResult(e) {
+            var features = document.getElementById('features');
+            var featureCollection = draw.getAll();
+            var answer = document.getElementById('calculated-area');
+            if (featureCollection.features.length > 0) {
+                features.style.display = "block";
+                var area = turf.area(featureCollection);
+                // restrict to area to 2 decimal points
+                var rounded_area = Math.round(area*100)/100;
+                answer.innerHTML = '<span> The area of your polygon(s) is <strong>' + rounded_area + '</strong> square meters</span>';
+                var url = CONTEXT + '/summarize';
+                var combined = turf.combine(featureCollection);
+                var geometry = combined.features[0].geometry;
+                features.innerHTML = "<b>Please wait...</b> <br/> <br/>Loading with the below query: <br/>" + JSON.stringify(geometry, null, 1);
+                tokenForSummary.cancel();
+                Rx.Observable.fromPromise(postWithCancel(url, tokenForSummary, geometry))
+                    .subscribe(function (response){
+                        console.log(response);
+                        features.innerHTML = "<b>Result of the querying polgon(s):</b><br/>" + JSON.stringify(JSON.parse(response), null, 2);
+                    });
+            } else {
+                answer.innerHTML = '';
+                features.style.display = "none";
+                if (e.type !== 'draw.delete') alert("Use the draw tools to draw a polygon!");
+            }
+        }
+
+        function newMapboxDraw() {
+            var color1 = '#D20C0C';
+            var color2 = '#000';
+            var color3 = '#FFF';
+
+            var lineStokeActive = {
+                id: 'gl-draw-line',
+                type: 'line',
+                filter: ['all', ['==', '$type', 'LineString'], ['!=', 'mode', 'static']],
+                layout: {
+                    'line-cap': 'round',
+                    'line-join': 'round'
+                },
+                paint: {
+                    'line-color': color1,
+                    'line-dasharray': [0.2, 2],
+                    'line-width': 2
+                }
+            }, polygonFillActive = {
+                id: 'gl-draw-polygon-fill',
+                type: 'fill',
+                filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
+                paint: {
+                    'fill-color': color1,
+                    'fill-outline-color': color1,
+                    'fill-opacity': 0.1
+                }
+            }, polygonOutlineActive = {
+                // This doesn't style the first edge of the polygon, which uses the line stroke styling instead
+                id: 'gl-draw-polygon-stroke-active',
+                type: 'line',
+                filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
+                layout: {
+                    'line-cap': 'round',
+                    'line-join': 'round'
+                },
+                paint: {
+                    'line-color': color1,
+                    'line-dasharray': [0.2, 2],
+                    'line-width': 2
+                }
+            }, vertexPointHalosActive = {
+                id: 'gl-draw-polygon-and-line-vertex-halo-active',
+                type: 'circle',
+                filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
+                paint: {
+                    'circle-radius': 5,
+                    'circle-color': color3
+                }
+            }, vertexPointsActive = {
+                id: 'gl-draw-polygon-and-line-vertex-active',
+                type: 'circle',
+                filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
+                paint: {
+                    'circle-radius': 3,
+                    'circle-color': color1
+                }
+            };
+            var lineStokeInactive = {
+                id: 'gl-draw-line-static',
+                type: 'line',
+                filter: ['all', ['==', '$type', 'LineString'], ['==', 'mode', 'static']],
+                layout: {
+                    'line-cap': 'round',
+                    'line-join': 'round'
+                },
+                paint: {
+                    'line-color': color2,
+                    'line-width': 3
+                }
+            }, polygonFillInactive = {
+                id: 'gl-draw-polygon-fill-static',
+                type: 'fill',
+                filter: ['all', ['==', '$type', 'Polygon'], ['==', 'mode', 'static']],
+                paint: {
+                    'fill-color': color2,
+                    'fill-outline-color': color2,
+                    'fill-opacity': 0.1
+                }
+            }, polygonOutlineInactive = {
+                id: 'gl-draw-polygon-stroke-static',
+                type: 'line',
+                filter: ['all', ['==', '$type', 'Polygon'], ['==', 'mode', 'static']],
+                layout: {
+                    'line-cap': 'round',
+                    'line-join': 'round'
+                },
+                paint: {
+                    'line-color': color2,
+                    'line-width': 3
+                }
+            };
+
+            return new MapboxDraw({
+                displayControlsDefault: false,
+                styles: [
+                    // ACTIVE (being drawn)
+                    lineStokeActive,
+                    polygonFillActive,
+                    polygonOutlineActive,
+                    vertexPointHalosActive,
+                    vertexPointsActive,
+                    // INACTIVE (static, already drawn)
+                    lineStokeInactive,
+                    polygonFillInactive,
+                    polygonOutlineInactive
+                ],
+                controls: {
+                    polygon: true,
+                    trash: true
+                }
+            });
+        }
+    }
+
+    function requestWithCancel(method, url, token, body) {
+        var request = new XMLHttpRequest();
+        request.open(method, url);
+        if (body){
+            request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            body = JSON.stringify(body);
+        }
+        request.send(body);
+        return new Promise(
+            function (resolve, reject) {
+                request.onload = function () {
+                    resolve(request.responseText);
+                };
+                token.cancel = function () {
+                    request.abort();
+                    reject(new Error("Cancelled")); // reject the promise
+                };
+                request.onerror = reject;
+            }
+        );
+    }
+
+    function getWithCancel(url, token) { // the token is for cancellation
+        return requestWithCancel("GET", url, token);
+    }
+
+    function postWithCancel(url, token, body) { // the token is for cancellation
+        return requestWithCancel("POST", url, token, body);
+    }
+
+    function queryString() {
+        return (function(a) {
+            if (a == "") return {};
+            var b = {};
+            for (var i = 0; i < a.length; ++i)
+            {
+                var p=a[i].split('=', 2);
+                if (p.length == 1)
+                    b[p[0]] = "";
+                else
+                    b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+            }
+            return b;
+        })(window.location.search.substr(1).split('&'));
+    }
+
+    function toCenter(qs) {
+        var text = qs['center'];
+        if (text && text.includes(",")){
+            tokens = text.split(",");
+            return [tokens[0].valueOf(), tokens[1].valueOf()];
+        }
+        return null
+    }
+</script>
+</body>
+</html>
