@@ -1,5 +1,10 @@
 package edu.pitt.isg.spewmap.web;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -23,16 +28,25 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.PrintWriter;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static edu.pitt.isg.spewmap.geom.GeometryAid.GEOJSON;
+import static java.lang.reflect.Modifier.FINAL;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
+import static org.hibernate.validator.internal.util.CollectionHelper.asSet;
 
 
 @RestController
@@ -41,18 +55,54 @@ import static java.util.stream.Collectors.joining;
 @Slf4j
 public class HouseholdController {
     private static final String READ = "/{id}";
+    private static final String DUMP_PATH = "/mnt/consus/data/shared_group_data/syneco/spewmap/usa.pp.arrays.geojson";
+//    private static final String DUMP_PATH = "/tmp/us.geojson";
     private static final String BBOX = "/bbox/{xMin},{yMin},{xMax},{yMax}";
 
     private final HouseholdRepo repo;
     private final GeometryAid aid;
 
+
     @RequestMapping(path=READ, produces={GEOJSON})
-    public Object readGeoJson(@PathVariable Long id){
+    public Object readGeoJson(@PathVariable String id){
         return aid.toFeature(read(id));
     }
 
+    @GetMapping("/dump")
+    public Object dump(Pageable pageable) throws Exception {
+        Map<String, Object> body = new HashMap<>();
+        body.put("filePath", DUMP_PATH);
+        body.put("pageable", pageable);
+        log.info("Creating future");
+        Executors.newScheduledThreadPool(1).schedule(
+                () -> asynchPopulateFile(pageable),
+                0, TimeUnit.SECONDS
+        );
+        log.info("Returning " + body);
+        return body;
+    }
+
+    private void asynchPopulateFile(Pageable pageable){
+        try {
+            log.info("asynchPopulateFile");
+            final Gson gson = new Gson();
+            final int pageSize = pageable.getPageSize();
+            final List<Household> content = repo.findAllWithLimit(pageSize);
+            try (PrintWriter writer = new PrintWriter(DUMP_PATH, "UTF-8")) {
+                for (Household hh : content){
+                    final Feature f = aid.toFeature(hh);
+                    final String json = gson.toJson(f.featurePoint2d());
+                    writer.println(json);
+                }
+            }
+            log.info("done for " + pageSize);
+        } catch (Exception e){
+            log.error("asynchPopulateFile failed", e);
+        }
+    }
+
     @GetMapping(READ)
-    public Household read(@PathVariable Long id){
+    public Household read(@PathVariable String id){
         try {
             final Household household = repo.findById(id).get();
             return household;
@@ -63,7 +113,6 @@ public class HouseholdController {
 
 
     @GetMapping(BBOX)
-    //@RequestMapping(path=BBOX)//, produces={GEOJSON})
     public Object findAllAsGeoJosnByBoundingBox(@PathVariable Double xMin,
                                        @PathVariable Double yMin,
                                        @PathVariable Double xMax,

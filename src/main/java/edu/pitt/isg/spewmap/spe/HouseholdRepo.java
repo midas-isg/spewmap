@@ -8,8 +8,11 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface HouseholdRepo extends JpaRepository<Household, Long> {
+public interface HouseholdRepo extends JpaRepository<Household, String> {
     @Query(value = "select h from Household h where within(h.point, ?1) = true",
             countQuery = "select count(*) from Household h where within(h.point, ?1) = true")
     Page<Household> findWithinGeometry(Geometry filter, Pageable page);
+
+    @Query(value = "select * from Household h LIMIT ?1", nativeQuery=true)
+    List<Household> findAllWithLimit(Integer limit);
 }

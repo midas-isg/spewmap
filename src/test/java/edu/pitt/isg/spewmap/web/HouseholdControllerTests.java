@@ -62,7 +62,7 @@ public class HouseholdControllerTests {
 
     @Test @DisplayName("NotFound if the house is not found.")
     void notFoundById() throws Exception {
-        given(mockRepo.findById(anyLong())).willReturn(Optional.empty());
+        given(mockRepo.findById(any())).willReturn(Optional.empty());
 
         mvc.perform(get(aHouseholdUrl))
                 .andExpect(status().isNotFound());
@@ -141,7 +141,7 @@ public class HouseholdControllerTests {
         final Household household = newHousehold(ID);
         final Point point = newPoint(X, Y);
         household.setPoint(point);
-        given(mockRepo.findById(anyLong())).willReturn(Optional.of(household));
+        given(mockRepo.findById(any())).willReturn(Optional.of(household));
     }
 
     private void givenAidWillCallRealMetods() {
