@@ -1,10 +1,6 @@
 package edu.pitt.isg.spewmap.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -21,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,24 +26,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.PrintWriter;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static edu.pitt.isg.spewmap.geom.GeometryAid.GEOJSON;
-import static java.lang.reflect.Modifier.FINAL;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
-import static org.hibernate.validator.internal.util.CollectionHelper.asSet;
 
 
 @RestController
@@ -61,7 +53,7 @@ public class HouseholdController {
 
     private final HouseholdRepo repo;
     private final GeometryAid aid;
-
+    private final TransactionTemplate transactionTemplate;
 
     @RequestMapping(path=READ, produces={GEOJSON})
     public Object readGeoJson(@PathVariable String id){
@@ -75,37 +67,47 @@ public class HouseholdController {
         body.put("pageable", pageable);
         log.info("Creating future");
         Executors.newScheduledThreadPool(1).schedule(
-                () -> asynchPopulateFile(pageable),
+                () -> populateFileInTransaction(pageable),
                 0, TimeUnit.SECONDS
         );
         log.info("Returning " + body);
         return body;
     }
 
-    private void asynchPopulateFile(Pageable pageable){
+    private void populateFileInTransaction(Pageable pageable) {
+        transactionTemplate.setReadOnly(true);
+        transactionTemplate.execute(transactionStatus -> {
+            populateFile(pageable);
+            transactionStatus.setRollbackOnly();
+            return null;
+        });
+    }
+
+    private void populateFile(Pageable pageable) {
         try {
-            log.info("asynchPopulateFile");
-            final Gson gson = new Gson();
+            log.info("populateFile");
+            final  Gson gson = new Gson();
             final int pageSize = pageable.getPageSize();
-            final List<Household> content = repo.findAllWithLimit(pageSize);
             try (PrintWriter writer = new PrintWriter(DUMP_PATH, "UTF-8")) {
-                for (Household hh : content){
-                    final Feature f = aid.toFeature(hh);
-                    final String json = gson.toJson(f.featurePoint2d());
-                    writer.println(json);
+                try (Stream<Household> content = repo.findAllWithLimit(pageSize)) {
+                    content.forEach(hh -> writer.println(toGeoJson(gson, hh)));
                 }
             }
             log.info("done for " + pageSize);
         } catch (Exception e){
-            log.error("asynchPopulateFile failed", e);
+            log.error("populateFile failed", e);
         }
+    }
+
+    private String toGeoJson(Gson g, Household hh) {
+        final Feature f = aid.toFeature(hh);
+        return g.toJson(f.featurePoint2d());
     }
 
     @GetMapping(READ)
     public Household read(@PathVariable String id){
         try {
-            final Household household = repo.findById(id).get();
-            return household;
+            return repo.findById(id).get();
         } catch (NoSuchElementException e){
             throw new ResourceNotFound("No household with READ = " + id, e);
         }

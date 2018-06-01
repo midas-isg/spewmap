@@ -5,6 +5,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import lombok.Data;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
@@ -19,10 +20,17 @@ public class Feature {
 
     private Map<String, Object> point2d() {
         final Map<String, Object> point = new HashMap<>();
-        final Coordinate coordinates = geometry.getCoordinate();
         point.put("type", "Point");
-        point.put("coordinates", asList(coordinates.x, coordinates.y));
+        point.put("coordinates", toCoordinates());
         return point;
+    }
+
+    private List<Double> toCoordinates() {
+        final Geometry geometry = getGeometry();
+        if (geometry == null)
+            return null;
+        final Coordinate coordinate = geometry.getCoordinate();
+        return asList(coordinate.x, coordinate.y);
     }
 
     public Map<String, Object> featurePoint2d(){

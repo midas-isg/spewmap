@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import java.util.List;
+import java.util.stream.Stream;
 
 public interface HouseholdRepo extends JpaRepository<Household, String> {
     @Query(value = "select h from Household h where within(h.point, ?1) = true",
@@ -14,5 +14,5 @@ public interface HouseholdRepo extends JpaRepository<Household, String> {
     Page<Household> findWithinGeometry(Geometry filter, Pageable page);
 
     @Query(value = "select * from Household h LIMIT ?1", nativeQuery=true)
-    List<Household> findAllWithLimit(Integer limit);
+    Stream<Household> findAllWithLimit(Integer limit);
 }
