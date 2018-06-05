@@ -225,6 +225,27 @@
     }
 
     function addCircleLayer(id) {
+        var circleRaceColor = [
+            'match',
+            ['at', 0, ['get', 'races']],
+            1, 'rgb(212, 44, 44)', //1 .White alone
+            2, 'rgb(0, 169, 157)', // 2 .Black or African American alone
+            6, 'rgb(153, 102, 255)',  // 6 .Asian alone
+            9, '#646464', // 9 .Two or More Races
+            'rgb(170, 147, 61)' // other
+        ];
+
+        var circleAgeColor = [
+            'step',
+            ['at', 0, ['get', 'ages']],
+            'rgb(0, 0, 255)', 34,
+            'rgb(51, 194, 255)', 44,
+            'rgb(230, 152, 0)', 54,
+            'rgb(255, 0, 0)', 64,
+            'rgb(255, 0, 255)'
+        ];
+        var circleColor = circleAgeColor;
+        // var circleColor = circleRaceColor;
         map.addLayer({
             id: id,
             type: 'circle',
@@ -235,7 +256,7 @@
                     base: 1.75,
                     stops: [ [16, 2], [22, 40] ]
                 },
-                'circle-color': 'red' //'orange' //'red'
+                'circle-color': circleColor
             },
             filter: ['==', '$type', 'Point']
         });
