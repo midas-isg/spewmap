@@ -12,7 +12,7 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.0/mapbox-gl-draw.js'></script>
     <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.0/mapbox-gl-draw.css' type='text/css'/>
     <style>
-        .person-legend {
+        .legend {
             height: fit-content;
             width: fit-content;
             position: absolute;
@@ -22,8 +22,21 @@
             background-color: rgba(255, 255, 255, .8);
             padding: 0px;
             transform: translate(0%, 0%);
-            display: none;
+            /*display: none;*/
         }
+        .bubblecell {
+            height: 4px;
+            width: 4px;
+            margin: auto;
+            padding: 2px;
+            -webkit-border-radius: 10px;
+            -moz-border-radius: 10px;
+            border-radius: 10px;
+            -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+            -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        }
+
         body { margin:0; padding:0; }
         #map { position:absolute; top:0; bottom:0; width:100%; }
         /* Show drawn polygon area */
@@ -110,8 +123,86 @@
     <span><i>Note that: some points are dropped at zoom lower than 14! </i> </b><b>Current Zoom</b> = <span id='zoom-level'> </span></span>
     <span id='calculated-area'></span>
 </div>
-<div class='person-legend'>
-    <div>Size (Occupant) Legend</div>
+<div class='legend' id='Household'>
+    <div>Legend: Household</div>
+    <table style='text-align: left; width: 150px;' border='0' cellpadding='2' cellspacing='2'>
+        <tbody>
+        <tr>
+            <td><div class='bubblecell' style='text-align: center; background-color: orange;'>&nbsp;</div></td>
+        </tr>
+        <tr>
+            <td class='legendtext' style='text-align: center;'>household</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class='legend' id='Income'>
+    <div>Legend: Income ($1,000)</div>
+    <table style="text-align: left; width: 200px;" border="0" cellpadding="2" cellspacing="2">
+        <tbody>
+        <tr>
+            <td><div class="bubblecell" style=" text-align: center; background-color: rgb(229, 159, 0);"></div></td>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(168, 116, 0);"></div></td>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(63, 115, 127);"></div></td>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(30, 144, 255);"></div></td>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(11, 181, 255);"></div></td>
+        </tr>
+        <tr>
+            <td class="legendtext" style="text-align: center;">0-25</td>
+            <td class="legendtext" style="text-align: center;">25-75</td>
+            <td class="legendtext" style="text-align: center;">75-125</td>
+            <td class="legendtext" style="text-align: center;">125-250</td>
+            <td class="legendtext" style="text-align: center;">250+</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<div class='legend' id='Householder Race'>
+    <div>Legend: Householder Race</div>
+    <table style="text-align: left; width: 200px;" border="0" cellpadding="2" cellspacing="2">
+        <tbody>
+        <tr>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(212, 44, 44);"></div></td>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(0, 169, 157);"></div></td>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(153, 102, 255);"></div></td>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(170, 147, 61);"></div></td>
+            <td><div class="bubblecell" style="text-align: center; background-color:#646464;"></div></td>
+        </tr>
+        <tr>
+            <td class="legendtext" style="text-align: center;">White</td>
+            <td class="legendtext" style="text-align: center;">Black</td>
+            <td class="legendtext" style="text-align: center;">Asian</td>
+            <td class="legendtext" style="text-align: center;">Other</td>
+            <td class="legendtext" style="text-align: center;">2+</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<div class='legend' id='Householder Age'>
+    <div>Legend: Householder Age</div>
+    <table style="text-align: left; width: 200px;" border="0" cellpadding="2" cellspacing="2">
+        <tbody>
+        <tr>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(0, 0, 255);"></div></td>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(51, 194, 255);"></div></td>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(230, 152, 0);"></div></td>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(255, 0, 0);"></div></td>
+            <td><div class="bubblecell" style="text-align: center; background-color: rgb(255, 0, 255);"></div></td>
+        </tr>
+        <tr>
+            <td class="legendtext" style="text-align: center;">15-34</td>
+            <td class="legendtext" style="text-align: center;">35-44</td>
+            <td class="legendtext" style="text-align: center;">45-54</td>
+            <td class="legendtext" style="text-align: center;">55-64</td>
+            <td class="legendtext" style="text-align: center;">65+</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class='legend' id='Size (Occupants)'>
+    <div>Legend: Size (Occupant)</div>
     <table style='text-align: left; width: 150px;' border='0' cellpadding='2' cellspacing='2'>
         <tbody>
         <tr>
@@ -344,6 +435,7 @@
                         }
                         this.className = 'active';
                         map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+                        document.getElementById(clickedLayer).style.display = 'block';
                     }
                 };
                 var layers = document.getElementById('menu');
@@ -351,7 +443,10 @@
             }
 
             function hide(id) {
+                var legend = document.getElementById(id);
                 map.setLayoutProperty(id, 'visibility', 'none');
+                // if (legend)
+                    legend.style.display = 'none';
                 this.className = '';
             }
         }
