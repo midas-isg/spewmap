@@ -23,6 +23,7 @@
             padding: 0px;
             transform: translate(0%, 0%);
             display: none;
+            border-radius: 5px;
         }
         .bubblecell {
             height: 4px;
@@ -123,6 +124,7 @@
     <span><i>Note that: some points are dropped at zoom lower than 14! </i> </b><b>Current Zoom</b> = <span id='zoom-level'> </span></span>
     <span id='calculated-area'></span>
 </div>
+<!--
 <div class='legend' id='Household'>
     <div>Legend: Household</div>
     <table style='text-align: left; width: 150px;' border='0' cellpadding='2' cellspacing='2'>
@@ -220,6 +222,7 @@
         </tbody>
     </table>
 </div>
+-->
 <!--<script src = 'http://betaweb.rods.pitt.edu/spewtiles/basic_template/style.js'></script>-->
 <script>
     var CONTEXT = '/spewmap/households/api';
@@ -231,7 +234,17 @@
         zoom: qs['zoom'] || 3, // 9, //NYC // 3, //USA
         center: toCenter(qs) || [-107,43], //[-74.4714737, 40.4724525], // NYC // [-107,43], // USA
         container: 'map'
-    });
+    }),
+    RACE_CATEGORIES = {
+        1 : "White",
+        2 : "Black",
+        6 : "Asian",
+        9: "Other",
+        null: "Multiracial"
+    },
+    SIZE_CATEGORIES = {
+        null: "5+"
+    };
     map.on('load', onLoad);
 
     function onLoad() {
@@ -357,6 +370,143 @@
             addTileLayer(id, srcId, 'orange');
         }
 
+        function getLegendCategories(legendID) {
+            var category;
+
+            switch(legendID) {
+                case 'Householder Race':
+                    category = RACE_CATEGORIES;
+                break;
+
+                case 'Size (Occupants)':
+                    category = SIZE_CATEGORIES;
+                break;
+
+                default:
+                break;
+            }
+
+            return category;
+        }
+
+        function addLegend(legendID, circleColor) {
+            var legendItem = document.createElement('div'),
+                legendTitle = document.createElement('caption'),
+                legendItemTable = document.createElement('table'),
+                tableBody = document.createElement('tbody'),
+                headerRow = document.createElement('tr'),
+                header,
+                contentRow = document.createElement('tr'),
+                content,
+                bubbleCell,
+                categoryValue = getLegendCategories(legendID),
+                i;
+
+            legendItem.classList.add("legend");
+            legendItem.id = legendID;
+            legendItem.style.display = "none";
+
+            legendItemTable.style.textAlign = "left";
+            legendItemTable.style.width = "200px";
+            legendItemTable.border = "0";
+            legendItemTable.cellPadding = "2";
+            legendItemTable.cellSpacing = "2";
+
+            legendTitle.innerHTML = "<strong>" + legendID + "</strong>";
+            legendItemTable.appendChild(legendTitle);
+
+            //console.log(legendID);
+            //console.log(circleColor);
+            //console.log("~~~~~");
+
+            if(typeof(circleColor) === "string") {
+                header = document.createElement('td');
+                header.classList.add("legendtext");
+                header.style.textAlign = "center";
+                header.innerHTML = legendID;
+
+                content = document.createElement('td');
+                bubbleCell = document.createElement('div');
+                bubbleCell.classList.add("bubblecell");
+                bubbleCell.style.textAlign = "center";
+                bubbleCell.style.backgroundColor = circleColor;
+
+                content.appendChild(bubbleCell);
+                contentRow.appendChild(content);
+                headerRow.appendChild(header);
+
+                tableBody.appendChild(contentRow);
+                tableBody.appendChild(headerRow);
+            }
+            else {
+                for(i = 2; i < circleColor.length; i += 2) {
+                    header = document.createElement('td');
+                    header.classList.add("legendtext");
+                    header.style.textAlign = "center";
+
+                    content = document.createElement('td');
+                    bubbleCell = document.createElement('div');
+                    bubbleCell.classList.add("bubblecell");
+                    bubbleCell.style.textAlign = "center";
+
+                    switch(circleColor[0]) {
+                        case 'step':
+                            if(i == 2) {
+                                header.innerHTML = "&le; " + circleColor[i+1];
+                            }
+                            else if((i+1) < circleColor.length){
+                                header.innerHTML = (1 + parseInt(circleColor[i-1])) + " - " + circleColor[i+1];
+                            }
+                            else {
+                                header.innerHTML = (1 + parseInt(circleColor[i-1])) + "+";
+                            }
+
+                            bubbleCell.style.backgroundColor = circleColor[i];
+                        break;
+
+                        case 'match':
+                            if((i+1) < circleColor.length){
+                                bubbleCell.style.backgroundColor = circleColor[i+1];
+                                if(categoryValue[circleColor[i]]) {
+                                    header.innerHTML = categoryValue[circleColor[i]];
+                                }
+                                else {
+                                    header.innerHTML = circleColor[i];
+                                }
+                            }
+                            else {
+                                bubbleCell.style.backgroundColor = circleColor[i];
+                                if(categoryValue[null]) {
+                                    header.innerHTML = categoryValue[null];
+                                }
+                                else {
+                                   header.innerHTML = "Other";
+                                }
+                            }
+                        break;
+
+                        default:
+                            alert("Undefined Format for " + legendID);
+                            return;
+                        break;
+                    }
+
+                    content.appendChild(bubbleCell);
+                    contentRow.appendChild(content);
+                    headerRow.appendChild(header);
+
+                    tableBody.appendChild(contentRow);
+                    tableBody.appendChild(headerRow);
+                }
+            }
+
+            legendItemTable.appendChild(tableBody);
+            legendItem.appendChild(legendItemTable);
+            document.body.appendChild(legendItem);
+
+            return;
+        }
+
         function addTileLayer(id, srcId, circleColor) {
             map.addLayer({
                 'id': id,
@@ -372,6 +522,8 @@
                 }
             }, 'waterway-label');
             makeLayerClickable(id, srcId);
+
+            addLegend(id, circleColor);
         }
 
         function makeLayerClickable(id, srcId) {
