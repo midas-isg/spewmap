@@ -41,7 +41,7 @@
             /*text-align: center;*/
         }
 
-        /* features */
+        /* https://www.mapbox.com/mapbox-gl-js/example/queryrenderedfeatures/ */
         #features {
             position: absolute;
             top: 0;
@@ -102,35 +102,34 @@
 <body>
 
 <div id='map'></div>
-<nav id="menu"></nav>
-<pre id='features' style="display: none"></pre>
+<nav id='menu'></nav>
+<pre id='features' style='display: none'></pre>
+<!--<pre id='features'></pre> &lt;!&ndash;Get features under the mouse pointer&ndash;&gt;-->
 <div class='calculation-box'>
-    <!--<div style="position:absolute;right:0;bottom:0;padding-right:15px">-->
+    <!--<div style='position:absolute;right:0;bottom:0;padding-right:15px'>-->
     <span><i>Note that: some points are dropped at zoom lower than 14! </i> </b><b>Current Zoom</b> = <span id='zoom-level'> </span></span>
     <span id='calculated-area'></span>
 </div>
 <div class='person-legend'>
     <div>Size (Occupant) Legend</div>
-    <table style="text-align: left; width: 150px;" border="0" cellpadding="2" cellspacing="2">
+    <table style='text-align: left; width: 150px;' border='0' cellpadding='2' cellspacing='2'>
         <tbody>
         <tr>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(67, 2, 252);">&nbsp;</div></td>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(7, 221, 249);">&nbsp;</div></td>
-            <td width="30px"><div class="bubblecell" style="text-align: center; background-color: rgb(242, 201, 15);">&nbsp;</div></td>
-            <td width="30px"><div class="bubblecell" style="text-align: center; background-color: rgb(239, 20, 93);">&nbsp;</div></td>
+            <td><div class='bubblecell' style='text-align: center; background-color: rgb(67, 2, 252);'>&nbsp;</div></td>
+            <td><div class='bubblecell' style='text-align: center; background-color: rgb(7, 221, 249);'>&nbsp;</div></td>
+            <td width='30px'><div class='bubblecell' style='text-align: center; background-color: rgb(242, 201, 15);'>&nbsp;</div></td>
+            <td width='30px'><div class='bubblecell' style='text-align: center; background-color: rgb(239, 20, 93);'>&nbsp;</div></td>
         </tr>
         <tr>
-            <td class="legendtext" style="text-align: center;">1</td>
-            <td class="legendtext" style="text-align: center;">2</td>
-            <td class="legendtext" style="text-align: center;">3-4</td>
-            <td class="legendtext" style="text-align: center;">5+</td>
+            <td class='legendtext' style='text-align: center;'>1</td>
+            <td class='legendtext' style='text-align: center;'>2</td>
+            <td class='legendtext' style='text-align: center;'>3-4</td>
+            <td class='legendtext' style='text-align: center;'>5+</td>
         </tr>
         </tbody>
     </table>
 </div>
-<!--<script src = "http://localhost:8001/basic_template/style.js"></script>-->
-<!--<script src = "http://localhost:8001/spewtiles/basic_template/style.js"></script>-->
-<script src = "http://betaweb.rods.pitt.edu/spewtiles/basic_template/style.js"></script>
+<!--<script src = 'http://betaweb.rods.pitt.edu/spewtiles/basic_template/style.js'></script>-->
 <script>
     var CONTEXT = '/spewmap/households/api';
     var tokenForSummary = {cancel: function(){}};
@@ -138,14 +137,15 @@
     var qs = queryString();
     var map = new mapboxgl.Map({
         style: 'mapbox://styles/mapbox/light-v9',
-        zoom: qs['zoom'] || 9, // 3,
-        center: toCenter(qs) || [-74.4714737, 40.4724525], // [-107,43], // USA
+        zoom: qs['zoom'] || 3, // 9, //NYC // 3, //USA
+        center: toCenter(qs) || [-107,43], //[-74.4714737, 40.4724525], // NYC // [-107,43], // USA
         container: 'map'
     });
     map.on('load', onLoad);
 
     function onLoad() {
-        var srcId = 'household-from-tile';
+        // var srcId = 'microtest'; // races-> race & ages ->age
+        var srcId = 'hh'; // usa with array & races-> races & ages ->age
         map.on('zoomend', onZoomend);
         onZoomend();
 
@@ -160,15 +160,20 @@
             var zoomLabel = document.getElementById('zoom-level');
             zoomLabel.innerHTML = zoom.toFixed(5);
         }
+        // map.on('mouseup', function (e) { // mousemove // Get features under the mouse pointer
+        map.on('DISABLE-mouseup', function (e) { // mousemove // Get features under the mouse pointer
+            var features = map.queryRenderedFeatures(e.point);
+            document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
+        });
     }
 
     function addSource(srcId) {
         map.addSource(srcId, { // Add a third party vector tile source https://www.mapbox.com/mapbox-gl-js/example/third-party/
-            "type": "vector",
-            "tiles": ["http://betaweb.rods.pitt.edu/spewtiles/density_test/{z}/{x}/{y}.pbf"],
-            // "tiles": ["http://localhost:8001/spewtiles/density_test/{z}/{x}/{y}.pbf"],
-            "minzoom": 0,
-            "maxzoom": 14 //14
+            'type': 'vector',
+            'tiles': ['https://spew.olympus.psc.edu/spewtiles/' + srcId + '/{z}/{x}/{y}.pbf'],
+            // 'tiles': ['http://betaweb.rods.pitt.edu/spewtiles/density_test/{z}/{x}/{y}.pbf'],
+            'minzoom': 0,
+            'maxzoom': 14 //14
         });
     }
 
@@ -176,8 +181,8 @@
         map.addLayer({
             id: 'label',
             type: 'symbol',
-            "source": srcId,
-            "source-layer": "density_test",
+            source: srcId,
+            'source-layer': srcId,
             minzoom: 19, //19
             layout: {
                 'text-allow-overlap': true,
@@ -188,15 +193,48 @@
     }
 
     function addCircleLayers(srcId) {
+        var ageId = 'Householder Age';
+        var raceId = 'Householder Race';
         var hhPersonsId = 'Size (Occupants)';
         var hhIncomeId = 'Income';
         var hhId = 'Household';
-        var toggleableLayerIds = [hhPersonsId, hhIncomeId, hhId];
+        var toggleableLayerIds = [ageId,
+            raceId, hhPersonsId, hhIncomeId, hhId];
 
+        addAgeTileLayer();
+        addRaceTileLayer();
         addPersonsTileLayer(hhPersonsId, srcId);
         addIncomeTileLayer(hhIncomeId, srcId);
         addHouseholdTileLayer(hhId, srcId);
+
         makeCircleLayersToggleable();
+
+        function addAgeTileLayer() {
+            var circleColor = [
+                'step',
+                ['get', 'age'],
+                'rgb(0, 0, 255)', 34,
+                'rgb(51, 194, 255)', 44,
+                'rgb(230, 152, 0)', 54,
+                'rgb(255, 0, 0)', 64,
+                'rgb(255, 0, 255)'
+            ];
+            addTileLayer(ageId, srcId, circleColor);
+        }
+
+        function addRaceTileLayer() {
+            var circleColor = [
+                'match',
+                ['get', 'races'], // FIXME: regenerate geojson and use 'race'
+                // ['get', 'race'],
+                1, 'rgb(212, 44, 44)', //1 .White alone
+                2, 'rgb(0, 169, 157)', // 2 .Black or African American alone
+                6, 'rgb(153, 102, 255)',  // 6 .Asian alone
+                9, '#646464', // 9 .Two or More Races
+                'rgb(170, 147, 61)' // other
+            ];
+            addTileLayer(raceId, srcId, circleColor);
+        }
 
         function addIncomeTileLayer(id, srcId) {
             var circleColor = [
@@ -215,13 +253,11 @@
             var circleColor = [
                 'match',
                 ['get', 'persons'],
-                1, rgb(67, 2, 252), // '#fbb03b',
-                2, rgb(7, 221, 249), //'#223b53',
-                3, rgb(242, 201, 15), //'#e55e5e',
-                4, rgb(242, 201, 15), //'#3bb2d0',
-                // 5, 'yellow',
-                // 6, 'green',
-                rgb(239, 20, 93) //'#ccc' // other
+                1, rgb(67, 2, 252),
+                2, rgb(7, 221, 249),
+                3, rgb(242, 201, 15),
+                4, rgb(242, 201, 15),
+                rgb(239, 20, 93) // other
             ];
             addTileLayer(id, srcId, circleColor)
         }
@@ -235,7 +271,7 @@
                 'id': id,
                 'type': 'circle',
                 'source': srcId,
-                'source-layer': 'density_test',
+                'source-layer': srcId,
                 paint: {
                     'circle-radius': {
                         base: 1.75,
@@ -349,7 +385,7 @@
             var featureCollection = draw.getAll();
             var answer = document.getElementById('calculated-area');
             if (featureCollection.features.length > 0) {
-                features.style.display = "block";
+                features.style.display = 'block';
                 var area = turf.area(featureCollection);
                 // restrict to area to 2 decimal points
                 var rounded_area = Math.round(area*100)/100;
@@ -366,7 +402,7 @@
                     });
             } else {
                 answer.innerHTML = '';
-                features.style.display = "none";
+                features.style.display = 'none';
                 if (e.type !== 'draw.delete') alert("Use the draw tools to draw a polygon!");
             }
         }
@@ -490,7 +526,7 @@
         var request = new XMLHttpRequest();
         request.open(method, url);
         if (body){
-            request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
             body = JSON.stringify(body);
         }
         request.send(body);
@@ -501,7 +537,7 @@
                 };
                 token.cancel = function () {
                     request.abort();
-                    reject(new Error("Cancelled")); // reject the promise
+                    reject(new Error('Cancelled')); // reject the promise
                 };
                 request.onerror = reject;
             }
@@ -509,24 +545,24 @@
     }
 
     function getWithCancel(url, token) { // the token is for cancellation
-        return requestWithCancel("GET", url, token);
+        return requestWithCancel('GET', url, token);
     }
 
     function postWithCancel(url, token, body) { // the token is for cancellation
-        return requestWithCancel("POST", url, token, body);
+        return requestWithCancel('POST', url, token, body);
     }
 
     function queryString() {
         return (function(a) {
-            if (a == "") return {};
+            if (a == '') return {};
             var b = {};
             for (var i = 0; i < a.length; ++i)
             {
                 var p=a[i].split('=', 2);
                 if (p.length == 1)
-                    b[p[0]] = "";
+                    b[p[0]] = '';
                 else
-                    b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+                    b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, ' '));
             }
             return b;
         })(window.location.search.substr(1).split('&'));
@@ -534,8 +570,8 @@
 
     function toCenter(qs) {
         var text = qs['center'];
-        if (text && text.includes(",")){
-            tokens = text.split(",");
+        if (text && text.includes(',')){
+            tokens = text.split(',');
             return [tokens[0].valueOf(), tokens[1].valueOf()];
         }
         return null
