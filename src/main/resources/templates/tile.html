@@ -22,7 +22,7 @@
             background-color: rgba(255, 255, 255, .8);
             padding: 0px;
             transform: translate(0%, 0%);
-            /*display: none;*/
+            display: none;
         }
         .bubblecell {
             height: 4px;
@@ -418,7 +418,7 @@
                 if (layerId !== hhId)
                     hide.call(link, layerId);
                 else
-                    link.className = 'active';
+                    show.call(link, layerId);
 
                 link.onclick = function (e) {
                     var clickedLayer = this.textContent;
@@ -433,21 +433,23 @@
                             var layer = toggleableLayerIds[i];
                             hide.call(id2link[layer], layer);
                         }
-                        this.className = 'active';
-                        map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
-                        document.getElementById(clickedLayer).style.display = 'block';
+                        show.call(this, clickedLayer);
                     }
                 };
                 var layers = document.getElementById('menu');
                 layers.appendChild(link);
             }
 
+            function show(id) {
+                this.className = 'active';
+                map.setLayoutProperty(id, 'visibility', 'visible');
+                document.getElementById(id).style.display = 'block';
+            }
+
             function hide(id) {
-                var legend = document.getElementById(id);
-                map.setLayoutProperty(id, 'visibility', 'none');
-                // if (legend)
-                    legend.style.display = 'none';
                 this.className = '';
+                map.setLayoutProperty(id, 'visibility', 'none');
+                document.getElementById(id).style.display = 'none';
             }
         }
 
