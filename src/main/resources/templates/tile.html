@@ -225,6 +225,7 @@
 -->
 <!--<script src = 'http://betaweb.rods.pitt.edu/spewtiles/basic_template/style.js'></script>-->
 <script>
+    "use strict";
     var CONTEXT = '/spewmap/households/api';
     var tokenForSummary = {cancel: function(){}};
     mapboxgl.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
@@ -467,6 +468,7 @@
                         case 'match':
                             if((i+1) < circleColor.length){
                                 bubbleCell.style.backgroundColor = circleColor[i+1];
+
                                 if(categoryValue[circleColor[i]]) {
                                     header.innerHTML = categoryValue[circleColor[i]];
                                 }
@@ -476,6 +478,7 @@
                             }
                             else {
                                 bubbleCell.style.backgroundColor = circleColor[i];
+
                                 if(categoryValue[null]) {
                                     header.innerHTML = categoryValue[null];
                                 }
