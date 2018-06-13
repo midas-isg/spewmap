@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset='utf-8' />
-    <title>Add a third party vector tile source</title>
+    <title>SPEW Map</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
     <script src='//cdnjs.cloudflare.com/ajax/libs/rxjs/5.5.10/Rx.min.js'></script>
 
@@ -67,6 +67,7 @@
             background-color: rgba(255, 255, 255, .8);
             padding: 10px;
             transform: translate(0%, 0%);
+            display: none;
         }
 
         /* Show drawn polygon area */
@@ -140,8 +141,12 @@
         }
 
         #menu-button {
-            background-color: #ffffff;
-            border: 1px solid rgba(0,0,0,0.4);
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 2px solid #dddddd;
+            border-radius: 5px;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -160,18 +165,18 @@
 
 <pre id='features' style='display: none'></pre>
 <!--<pre id='features'></pre> &lt;!&ndash;Get features under the mouse pointer&ndash;&gt;-->
-<div class='zoom-note'>
-    <span><i>Note that: some points are dropped at zoom lower than 14! </i></span>
+<div class='zoom-note' id='zoom-note'>
+    <span><i>Note that: some points are dropped at zoom lower than 14!</i></span>
 </div>
 <div class='calculation-box'>
-    <!--<div style='position:absolute;right:0;bottom:0;padding-right:15px'>-->
     <span></b><b>Current Zoom</b> = <span id='zoom-level'> </span></span>
     <span id='calculated-area'></span>
 </div>
-<!--<script src = 'http://betaweb.rods.pitt.edu/spewtiles/basic_template/style.js'></script>-->
+
 <script>
     "use strict";
     var CONTEXT = '/spewmap/households/api';
+    var theZoom = 14;
     var tokenForSummary = {cancel: function(){}};
     mapboxgl.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
     var qs = queryString();
@@ -221,7 +226,12 @@
             var zoom = map.getZoom();
             console.log('zoom=' + zoom + '; bbox='+ JSON.stringify(map.getBounds()));
             var zoomLabel = document.getElementById('zoom-level');
+            var zoomNote = document.getElementById('zoom-note');
             zoomLabel.innerHTML = zoom.toFixed(5);
+            if (zoom >= theZoom)
+                zoomNote.style.display = 'none';
+            else
+                zoomNote.style.display = 'block';
         }
         // map.on('mouseup', function (e) { // mousemove // Get features under the mouse pointer
         map.on('DISABLE-mouseup', function (e) { // mousemove // Get features under the mouse pointer
@@ -236,7 +246,7 @@
             'tiles': ['https://spew.olympus.psc.edu/spewtiles/' + srcId + '/{z}/{x}/{y}.pbf'],
             // 'tiles': ['http://betaweb.rods.pitt.edu/spewtiles/density_test/{z}/{x}/{y}.pbf'],
             'minzoom': 0,
-            'maxzoom': 14 //14
+            'maxzoom': theZoom
         });
     }
 
@@ -327,7 +337,7 @@
                     125000: '75-125',
                     250000: '125-250'
                 },
-                'endMapping': '250+'
+                'endMapping': '&ge; 250'
             };
             addTileLayer(id, srcId, circleColor, incomeCategories);
         }
@@ -626,6 +636,11 @@
             var featureCollection = draw.getAll();
             var answer = document.getElementById('calculated-area');
             if (featureCollection.features.length > 0) {
+                features.onclick = function(){
+                    tokenForSummary.cancel();
+                    draw.deleteAll();
+                    updateQueryResult(null);
+                };
                 features.style.display = 'block';
                 var area = turf.area(featureCollection);
                 // restrict to area to 2 decimal points
@@ -644,7 +659,7 @@
             } else {
                 answer.innerHTML = '';
                 features.style.display = 'none';
-                if (e.type !== 'draw.delete') alert("Use the draw tools to draw a polygon!");
+                if (e && e.type !== 'draw.delete') alert("Use the draw tools to draw a polygon!");
             }
         }
 
@@ -795,12 +810,12 @@
 
     function queryString() {
         return (function(a) {
-            if (a == '') return {};
+            if (a === '') return {};
             var b = {};
             for (var i = 0; i < a.length; ++i)
             {
                 var p=a[i].split('=', 2);
-                if (p.length == 1)
+                if (p.length === 1)
                     b[p[0]] = '';
                 else
                     b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, ' '));
@@ -810,7 +825,8 @@
     }
 
     function toCenter(qs) {
-        var text = qs['center'];
+        var text = qs['center'],
+            tokens;
         if (text && text.includes(',')){
             tokens = text.split(',');
             return [tokens[0].valueOf(), tokens[1].valueOf()];
