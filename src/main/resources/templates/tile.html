@@ -51,6 +51,7 @@
             background-color: rgba(255, 255, 255, .8);
             padding: 10px;
             transform: translate(0%, 0%);
+            display: none;
         }
 
         /* Show drawn polygon area */
@@ -134,123 +135,23 @@
 <nav id='menu'></nav>
 <pre id='features' style='display: none'></pre>
 <!--<pre id='features'></pre> &lt;!&ndash;Get features under the mouse pointer&ndash;&gt;-->
-<div class='zoom-note'>
-    <span><i>Note that: some points are dropped at zoom lower than 14! </i></span>
+<div class='zoom-note' id='zoom-note'>
+    <span><i>Note that: some points are dropped at zoom lower than 14!</i></span>
 </div>
 <div class='calculation-box'>
-    <!--<div style='position:absolute;right:0;bottom:0;padding-right:15px'>-->
     <span></b><b>Current Zoom</b> = <span id='zoom-level'> </span></span>
     <span id='calculated-area'></span>
 </div>
-<!--
-<div class='legend' id='Household'>
-    <div>Legend: Household</div>
-    <table style='text-align: left; width: 150px;' border='0' cellpadding='2' cellspacing='2'>
-        <tbody>
-        <tr>
-            <td><div class='bubblecell' style='text-align: center; background-color: orange;'>&nbsp;</div></td>
-        </tr>
-        <tr>
-            <td class='legendtext' style='text-align: center;'>household</td>
-        </tr>
-        </tbody>
-    </table>
-</div>
-
-<div class='legend' id='Income'>
-    <div>Legend: Income ($1,000)</div>
-    <table style="text-align: left; width: 200px;" border="0" cellpadding="2" cellspacing="2">
-        <tbody>
-        <tr>
-            <td><div class="bubblecell" style=" text-align: center; background-color: rgb(229, 159, 0);"></div></td>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(168, 116, 0);"></div></td>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(63, 115, 127);"></div></td>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(30, 144, 255);"></div></td>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(11, 181, 255);"></div></td>
-        </tr>
-        <tr>
-            <td class="legendtext" style="text-align: center;">0-25</td>
-            <td class="legendtext" style="text-align: center;">25-75</td>
-            <td class="legendtext" style="text-align: center;">75-125</td>
-            <td class="legendtext" style="text-align: center;">125-250</td>
-            <td class="legendtext" style="text-align: center;">250+</td>
-        </tr>
-        </tbody>
-    </table>
-</div>
-<div class='legend' id='Householder Race'>
-    <div>Legend: Householder Race</div>
-    <table style="text-align: left; width: 200px;" border="0" cellpadding="2" cellspacing="2">
-        <tbody>
-        <tr>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(212, 44, 44);"></div></td>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(0, 169, 157);"></div></td>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(153, 102, 255);"></div></td>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(170, 147, 61);"></div></td>
-            <td><div class="bubblecell" style="text-align: center; background-color:#646464;"></div></td>
-        </tr>
-        <tr>
-            <td class="legendtext" style="text-align: center;">White</td>
-            <td class="legendtext" style="text-align: center;">Black</td>
-            <td class="legendtext" style="text-align: center;">Asian</td>
-            <td class="legendtext" style="text-align: center;">Other</td>
-            <td class="legendtext" style="text-align: center;">2+</td>
-        </tr>
-        </tbody>
-    </table>
-</div>
-<div class='legend' id='Householder Age'>
-    <div>Legend: Householder Age</div>
-    <table style="text-align: left; width: 200px;" border="0" cellpadding="2" cellspacing="2">
-        <tbody>
-        <tr>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(0, 0, 255);"></div></td>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(51, 194, 255);"></div></td>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(230, 152, 0);"></div></td>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(255, 0, 0);"></div></td>
-            <td><div class="bubblecell" style="text-align: center; background-color: rgb(255, 0, 255);"></div></td>
-        </tr>
-        <tr>
-            <td class="legendtext" style="text-align: center;">15-34</td>
-            <td class="legendtext" style="text-align: center;">35-44</td>
-            <td class="legendtext" style="text-align: center;">45-54</td>
-            <td class="legendtext" style="text-align: center;">55-64</td>
-            <td class="legendtext" style="text-align: center;">65+</td>
-        </tr>
-        </tbody>
-    </table>
-</div>
-
-<div class='legend' id='Size (Occupants)'>
-    <div>Legend: Size (Occupant)</div>
-    <table style='text-align: left; width: 150px;' border='0' cellpadding='2' cellspacing='2'>
-        <tbody>
-        <tr>
-            <td><div class='bubblecell' style='text-align: center; background-color: rgb(67, 2, 252);'>&nbsp;</div></td>
-            <td><div class='bubblecell' style='text-align: center; background-color: rgb(7, 221, 249);'>&nbsp;</div></td>
-            <td width='30px'><div class='bubblecell' style='text-align: center; background-color: rgb(242, 201, 15);'>&nbsp;</div></td>
-            <td width='30px'><div class='bubblecell' style='text-align: center; background-color: rgb(239, 20, 93);'>&nbsp;</div></td>
-        </tr>
-        <tr>
-            <td class='legendtext' style='text-align: center;'>1</td>
-            <td class='legendtext' style='text-align: center;'>2</td>
-            <td class='legendtext' style='text-align: center;'>3-4</td>
-            <td class='legendtext' style='text-align: center;'>5+</td>
-        </tr>
-        </tbody>
-    </table>
-</div>
--->
-<!--<script src = 'http://betaweb.rods.pitt.edu/spewtiles/basic_template/style.js'></script>-->
 <script>
     "use strict";
     var CONTEXT = '/spewmap/households/api';
+    var theZoom = 14;
     var tokenForSummary = {cancel: function(){}};
     mapboxgl.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
     var qs = queryString();
     var map = new mapboxgl.Map({
         style: 'mapbox://styles/mapbox/light-v9',
-        zoom: qs['zoom'] || 3, // 9, //NYC // 3, //USA
+        zoom: qs['zoom'] || theZoom, //3, // 9, //NYC // 3, //USA
         center: toCenter(qs) || [-107,43], //[-74.4714737, 40.4724525], // NYC // [-107,43], // USA
         container: 'map'
     });
@@ -271,7 +172,12 @@
             var zoom = map.getZoom();
             console.log('zoom=' + zoom + '; bbox='+ JSON.stringify(map.getBounds()));
             var zoomLabel = document.getElementById('zoom-level');
+            var zoomNote = document.getElementById('zoom-note');
             zoomLabel.innerHTML = zoom.toFixed(5);
+            if (zoom >= theZoom)
+                zoomNote.style.display = 'none';
+            else
+                zoomNote.style.display = 'block';
         }
         // map.on('mouseup', function (e) { // mousemove // Get features under the mouse pointer
         map.on('DISABLE-mouseup', function (e) { // mousemove // Get features under the mouse pointer
@@ -286,7 +192,7 @@
             'tiles': ['https://spew.olympus.psc.edu/spewtiles/' + srcId + '/{z}/{x}/{y}.pbf'],
             // 'tiles': ['http://betaweb.rods.pitt.edu/spewtiles/density_test/{z}/{x}/{y}.pbf'],
             'minzoom': 0,
-            'maxzoom': 14 //14
+            'maxzoom': theZoom
         });
     }
 
@@ -377,7 +283,7 @@
                     125000: '75-125',
                     250000: '125-250'
                 },
-                'endMapping': '250+'
+                'endMapping': '&ge; 250'
             };
             addTileLayer(id, srcId, circleColor, incomeCategories);
         }
