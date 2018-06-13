@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset='utf-8' />
-    <title>Add a third party vector tile source</title>
+    <title>SPEW Map</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
     <script src='//cdnjs.cloudflare.com/ajax/libs/rxjs/5.5.10/Rx.min.js'></script>
 
@@ -151,7 +151,7 @@
     var qs = queryString();
     var map = new mapboxgl.Map({
         style: 'mapbox://styles/mapbox/light-v9',
-        zoom: qs['zoom'] || theZoom, //3, // 9, //NYC // 3, //USA
+        zoom: qs['zoom'] || 3, // 9, //NYC // 3, //USA
         center: toCenter(qs) || [-107,43], //[-74.4714737, 40.4724525], // NYC // [-107,43], // USA
         container: 'map'
     });
