@@ -578,6 +578,11 @@
             var featureCollection = draw.getAll();
             var answer = document.getElementById('calculated-area');
             if (featureCollection.features.length > 0) {
+                features.ondblclick = function(){
+                    tokenForSummary.cancel();
+                    draw.deleteAll();
+                    updateQueryResult(null);
+                };
                 features.style.display = 'block';
                 var area = turf.area(featureCollection);
                 // restrict to area to 2 decimal points
@@ -596,7 +601,7 @@
             } else {
                 answer.innerHTML = '';
                 features.style.display = 'none';
-                if (e.type !== 'draw.delete') alert("Use the draw tools to draw a polygon!");
+                if (e && e.type !== 'draw.delete') alert("Use the draw tools to draw a polygon!");
             }
         }
 
