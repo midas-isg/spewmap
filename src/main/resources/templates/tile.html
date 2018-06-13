@@ -578,7 +578,7 @@
             var featureCollection = draw.getAll();
             var answer = document.getElementById('calculated-area');
             if (featureCollection.features.length > 0) {
-                features.ondblclick = function(){
+                features.onclick = function(){
                     tokenForSummary.cancel();
                     draw.deleteAll();
                     updateQueryResult(null);
