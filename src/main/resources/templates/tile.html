@@ -12,19 +12,35 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.0/mapbox-gl-draw.js'></script>
     <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.0/mapbox-gl-draw.css' type='text/css'/>
     <style>
-        .legend {
-            height: fit-content;
-            width: fit-content;
+        #legend-control {
             position: absolute;
-            /*margin-bottom: 10px;*/
             bottom: 34px;
-            left: 150px;
+            left: 10px;
+        }
+
+        #menu-panel {
+            display: inline-block;
+        }
+
+        #legend-panel {
+            display: inline-block;
+        }
+
+        .legend {
             background-color: rgba(255, 255, 255, .8);
             padding: 0px;
             transform: translate(0%, 0%);
             display: none;
             border-radius: 5px;
+            position: absolute;
+            bottom: 0px;
         }
+
+        .legend table {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
         .bubblecell {
             height: 4px;
             width: 4px;
@@ -88,14 +104,10 @@
         /* https://www.mapbox.com/mapbox-gl-js/example/toggle-layers/ */
         #menu {
             background: #fff;
-            position: absolute;
-            z-index: 1;
-            bottom: 34px;
-            left: 10px;
-            border-radius: 3px;
-            width: 130px;
             border: 1px solid rgba(0,0,0,0.4);
             font-family: 'Open Sans', sans-serif;
+            border-radius: 3px;
+            display: inline-block;
         }
 
         #menu a {
@@ -127,12 +139,30 @@
         #menu a.active:hover {
             background: #3074a4;
         }
+
+        #menu-button {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 2px solid #dddddd;
+            border-radius: 5px;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
 <div id='map'></div>
-<nav id='menu'></nav>
+
+<div id='legend-control'>
+    <div id='menu-panel'>
+        <nav id='menu'></nav>
+        <button id='menu-button'>&equiv;</button>
+    </div>
+
+    <div id='legend-panel'></div>
+</div>
+
 <pre id='features' style='display: none'></pre>
 <!--<pre id='features'></pre> &lt;!&ndash;Get features under the mouse pointer&ndash;&gt;-->
 <div class='zoom-note' id='zoom-note'>
@@ -142,6 +172,7 @@
     <span></b><b>Current Zoom</b> = <span id='zoom-level'> </span></span>
     <span id='calculated-area'></span>
 </div>
+
 <script>
     "use strict";
     var CONTEXT = '/spewmap/households/api';
@@ -150,12 +181,35 @@
     mapboxgl.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
     var qs = queryString();
     var map = new mapboxgl.Map({
-        style: 'mapbox://styles/mapbox/light-v9',
-        zoom: qs['zoom'] || 3, // 9, //NYC // 3, //USA
-        center: toCenter(qs) || [-107,43], //[-74.4714737, 40.4724525], // NYC // [-107,43], // USA
-        container: 'map'
-    });
+            style: 'mapbox://styles/mapbox/light-v9',
+            zoom: qs['zoom'] || 3, // 9, //NYC // 3, //USA
+            center: toCenter(qs) || [-107,43], //[-74.4714737, 40.4724525], // NYC // [-107,43], // USA
+            container: 'map'
+        }),
+        menuButton = document.getElementById('menu-button');
+
     map.on('load', onLoad);
+
+    function hideMenu() {
+        var menu = document.getElementById('menu');
+
+        menu.style.display = "none";
+        menuButton.style.display = null;
+
+        return;
+    }
+
+    function showMenu() {
+       var menu = document.getElementById('menu');
+
+        menu.style.display = "inline-block";
+        menuButton.style.display = "none";
+
+        return;
+    }
+
+    menuButton.onclick = showMenu;
+    hideMenu();
 
     function onLoad() {
         var srcId = 'hh'; // usa with array & races-> races & ages ->age
@@ -306,7 +360,8 @@
         }
 
         function addLegend(legendID, circleColor, categoryValues) {
-            var legendItem = document.createElement('div'),
+            var menuPanel = document.getElementById('legend-panel'),
+                legendItem = document.createElement('div'),
                 legendTitle = document.createElement('caption'),
                 legendItemTable = document.createElement('table'),
                 tableBody = document.createElement('tbody'),
@@ -334,7 +389,7 @@
             legendItem.style.display = "none";
 
             legendItemTable.style.textAlign = "left";
-            legendItemTable.style.width = "200px";
+            //legendItemTable.style.width = "200px";
             legendItemTable.border = "0";
             legendItemTable.cellPadding = "2";
             legendItemTable.cellSpacing = "2";
@@ -442,7 +497,7 @@
 
             legendItemTable.appendChild(tableBody);
             legendItem.appendChild(legendItemTable);
-            document.body.appendChild(legendItem);
+            menuPanel.appendChild(legendItem);
 
             return;
         }
@@ -514,6 +569,7 @@
 
                 link.onclick = function (e) {
                     var clickedLayer = this.textContent;
+
                     e.preventDefault();
                     e.stopPropagation();
                     var visibility = map.getLayoutProperty(clickedLayer, 'visibility');
@@ -527,6 +583,8 @@
                         }
                         show.call(this, clickedLayer);
                     }
+
+                    hideMenu();
                 };
                 var layers = document.getElementById('menu');
                 layers.appendChild(link);
@@ -748,12 +806,12 @@
 
     function queryString() {
         return (function(a) {
-            if (a == '') return {};
+            if (a === '') return {};
             var b = {};
             for (var i = 0; i < a.length; ++i)
             {
                 var p=a[i].split('=', 2);
-                if (p.length == 1)
+                if (p.length === 1)
                     b[p[0]] = '';
                 else
                     b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, ' '));
@@ -763,7 +821,8 @@
     }
 
     function toCenter(qs) {
-        var text = qs['center'];
+        var text = qs['center'],
+            tokens;
         if (text && text.includes(',')){
             tokens = text.split(',');
             return [tokens[0].valueOf(), tokens[1].valueOf()];
