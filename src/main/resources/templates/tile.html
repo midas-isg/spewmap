@@ -212,7 +212,8 @@
     hideMenu();
 
     function onLoad() {
-        var srcId = 'hh'; // usa with array & races-> races & ages ->age
+        // var srcId = 'hh'; // usa with array & races-> races & ages ->age
+        var srcId = 'usa'; // usa with array & races-> race & ages ->age
         map.on('zoomend', onZoomend);
         onZoomend();
 
@@ -252,7 +253,7 @@
             id: 'label',
             type: 'symbol',
             source: srcId,
-            'source-layer': srcId,
+            'source-layer': 'hh',
             minzoom: 19, //19
             layout: {
                 'text-allow-overlap': true,
@@ -507,7 +508,7 @@
                 'id': id,
                 'type': 'circle',
                 'source': srcId,
-                'source-layer': srcId,
+                'source-layer': 'hh',
                 paint: {
                     'circle-radius': {
                         base: 1.75,
