@@ -158,7 +158,6 @@
     map.on('load', onLoad);
 
     function onLoad() {
-        // var srcId = 'microtest'; // races-> race & ages ->age
         var srcId = 'hh'; // usa with array & races-> races & ages ->age
         map.on('zoomend', onZoomend);
         onZoomend();
@@ -179,8 +178,7 @@
             else
                 zoomNote.style.display = 'block';
         }
-        // map.on('mouseup', function (e) { // mousemove // Get features under the mouse pointer
-        map.on('DISABLE-mouseup', function (e) { // mousemove // Get features under the mouse pointer
+        map.on('DISABLE-mouseup', function (e) { // Get features under the mouse pointer
             var features = map.queryRenderedFeatures(e.point);
             document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
         });
@@ -190,7 +188,6 @@
         map.addSource(srcId, { // Add a third party vector tile source https://www.mapbox.com/mapbox-gl-js/example/third-party/
             'type': 'vector',
             'tiles': ['https://spew.olympus.psc.edu/spewtiles/' + srcId + '/{z}/{x}/{y}.pbf'],
-            // 'tiles': ['http://betaweb.rods.pitt.edu/spewtiles/density_test/{z}/{x}/{y}.pbf'],
             'minzoom': 0,
             'maxzoom': theZoom
         });
@@ -244,8 +241,7 @@
         function addRaceTileLayer() {
             var circleColor = [
                 'match',
-                ['get', 'races'], // FIXME: regenerate geojson and use 'race'
-                // ['get', 'race'],
+                ['get', 'race'],
                 1, 'rgb(212, 44, 44)', //1 .White alone
                 2, 'rgb(0, 169, 157)', // 2 .Black or African American alone
                 6, 'rgb(153, 102, 255)',  // 6 .Asian alone
@@ -257,10 +253,10 @@
                     1 : "White",
                     2 : "Black",
                     6 : "Asian",
-                    9: "Other",
+                    9: "Other"
                 },
                 'endMapping': "Multiracial"
-            }
+            };
 
             addTileLayer(raceId, srcId, circleColor, raceCategories);
         }
