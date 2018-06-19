@@ -12,28 +12,25 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.0/mapbox-gl-draw.js'></script>
     <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.0/mapbox-gl-draw.css' type='text/css'/>
     <style>
-        #legend-control {
-            position: absolute;
-            bottom: 34px;
-            left: 10px;
-        }
-
         #menu-panel {
             display: inline-block;
+            position: absolute;
+            bottom: 34px;
         }
 
         #legend-panel {
             display: inline-block;
+            position: absolute;
+            bottom: 34px;
+            right: 0px;
         }
 
         .legend {
-            background-color: rgba(255, 255, 255, .8);
+            background-color: rgba(0, 0, 0, .8);
+            color: goldenrod;
             padding: 0px;
             transform: translate(0%, 0%);
-            display: none;
             border-radius: 5px;
-            position: absolute;
-            bottom: 0px;
         }
 
         .legend table {
@@ -46,44 +43,44 @@
             width: 4px;
             margin: auto;
             padding: 2px;
-            -webkit-border-radius: 10px;
-            -moz-border-radius: 10px;
             border-radius: 10px;
-            -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
-            -moz-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
             box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
         }
 
-        body { margin:0; padding:0; }
+        body {
+            margin:0;
+            padding:0;
+            font-family: 'Open Sans', sans-serif;
+        }
+
         #map { position:absolute; top:0; bottom:0; width:100%; }
 
-        .zoom-note {
-            height: fit-content;
-            width: fit-content;
+        #copyright {
             position: absolute;
-            margin-left: 50px;
+            margin-left: 45px;
             border-radius: 5px;
-            left: 0px;
             background-color: rgba(255, 255, 255, .8);
-            padding: 10px;
-            transform: translate(0%, 0%);
-            display: none;
+            padding: 5px;
+        }
+
+        .zoom-note {
+            position: absolute;
+            top: 65px;
+            margin-left: 45px;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, .8);
+            padding: 5px;
         }
 
         /* Show drawn polygon area */
         .calculation-box {
-            height: fit-content;
-            width: fit-content;
             position: absolute;
-            margin-left: 50px;
-            margin-bottom: 8px;
             border-radius: 5px;
-            bottom: 0px;
-            left: 100px;
+            bottom: 5px;
+            left: 132px;
             background-color: rgba(255, 255, 255, .8);
             padding: 3px;
             transform: translate(0%, 0%);
-            /*text-align: center;*/
         }
 
         /* https://www.mapbox.com/mapbox-gl-js/example/queryrenderedfeatures/ */
@@ -105,7 +102,6 @@
         #menu {
             background: #fff;
             border: 1px solid rgba(0,0,0,0.4);
-            font-family: 'Open Sans', sans-serif;
             border-radius: 3px;
             display: inline-block;
         }
@@ -147,6 +143,7 @@
             width: 30px;
             height: 30px;
             cursor: pointer;
+            display: block;
         }
     </style>
 </head>
@@ -154,19 +151,21 @@
 
 <div id='map'></div>
 
-<div id='legend-control'>
-    <div id='menu-panel'>
-        <nav id='menu'></nav>
-        <button id='menu-button'>&equiv;</button>
-    </div>
+<div id='menu-panel'>
+    <button id='menu-button'>&equiv;</button>
+    <nav id='menu'></nav>
+</div>
 
     <div id='legend-panel'></div>
-</div>
 
 <pre id='features' style='display: none'></pre>
 <!--<pre id='features'></pre> &lt;!&ndash;Get features under the mouse pointer&ndash;&gt;-->
+<div class='' id='copyright'>
+    <div><span><strong>SPEWMap</strong></span></div>
+    <div><span><i>Copyright 2018. University of Pittsburgh, Carnegie Mellon University.</i></span></div>
+</div>
 <div class='zoom-note' id='zoom-note'>
-    <span><i>Note that: some points are dropped at zoom lower than 14!</i></span>
+    <span><i>Some points may not show at zoom lower than 14</i></span>
 </div>
 <div class='calculation-box'>
     <span></b><b>Current Zoom</b> = <span id='zoom-level'> </span></span>
@@ -194,22 +193,23 @@
         var menu = document.getElementById('menu');
 
         menu.style.display = "none";
-        menuButton.style.display = null;
+        menuButton.onclick = showMenu;
+        menuButton.style.width = null;
 
         return;
     }
 
     function showMenu() {
-       var menu = document.getElementById('menu');
+        var menu = document.getElementById('menu');
 
         menu.style.display = "inline-block";
-        menuButton.style.display = "none";
+        menuButton.onclick = hideMenu;
+        menuButton.style.width = "100%";
 
         return;
     }
 
-    menuButton.onclick = showMenu;
-    hideMenu();
+    showMenu();
 
     function onLoad() {
         // var srcId = 'hh'; // usa with array & races-> races & ages ->age
@@ -584,8 +584,6 @@
                         }
                         show.call(this, clickedLayer);
                     }
-
-                    hideMenu();
                 };
                 var layers = document.getElementById('menu');
                 layers.appendChild(link);
