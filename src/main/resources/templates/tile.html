@@ -12,12 +12,6 @@
     <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.0/mapbox-gl-draw.js'></script>
     <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.0/mapbox-gl-draw.css' type='text/css'/>
     <style>
-        #menu-panel {
-            display: inline-block;
-            position: absolute;
-            bottom: 34px;
-        }
-
         #legend-panel {
             display: inline-block;
             position: absolute;
@@ -60,16 +54,39 @@
             margin-left: 45px;
             border-radius: 5px;
             background-color: rgba(255, 255, 255, .8);
-            padding: 5px;
+        }
+
+        #zoom-note-text {
+            background-color: rgba(255, 255, 255, .8);
+            vertical-align: middle;
+            border-radius: 5px;
+            padding: 1px 3px;
         }
 
         .zoom-note {
             position: absolute;
-            top: 65px;
+            top: 56px;
             margin-left: 45px;
+        }
+
+        #zoom-note-button {
+            font-size: large;
+            padding-top: 0px;
+            padding-left: 5px;
             border-radius: 5px;
-            background-color: rgba(255, 255, 255, .8);
-            padding: 5px;
+            font-weight: 900;
+            width: 30px;
+        }
+
+        #zoom-note-button:active,
+        .zoom-note-button-active {
+            background-color: #whitesmoke;
+        }
+
+        .zoom-note-button-inactive {
+            border-color: cyan;
+            color: darkcyan;
+            background-color: #ffffff;
         }
 
         /* Show drawn polygon area */
@@ -145,6 +162,12 @@
             cursor: pointer;
             display: block;
         }
+
+        #menu-panel {
+            display: inline-block;
+            position: absolute;
+            bottom: 34px;
+        }
     </style>
 </head>
 <body>
@@ -165,7 +188,8 @@
     <div><span><i>Copyright 2018. University of Pittsburgh, Carnegie Mellon University.</i></span></div>
 </div>
 <div class='zoom-note' id='zoom-note'>
-    <span><i>Some points may not show at zoom lower than 14</i></span>
+    <button id='zoom-note-button'>&#9888;</button>
+    <span id='zoom-note-text'><i>Some points cannot render at zoom lower than 14</i></span>
 </div>
 <div class='calculation-box'>
     <span></b><b>Current Zoom</b> = <span id='zoom-level'> </span></span>
@@ -174,20 +198,44 @@
 
 <script>
     "use strict";
-    var CONTEXT = '/spewmap/households/api';
-    var theZoom = 14;
-    var tokenForSummary = {cancel: function(){}};
+
+    var CONTEXT = '/spewmap/households/api',
+        theZoom = 14,
+        tokenForSummary = {cancel: function(){}},
+        qs = queryString(),
+        map,
+        menuButton = document.getElementById('menu-button'),
+        zoomNoteButton = document.getElementById('zoom-note-button');
+
     mapboxgl.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
-    var qs = queryString();
-    var map = new mapboxgl.Map({
-            style: 'mapbox://styles/mapbox/light-v9',
-            zoom: qs['zoom'] || 3, // 9, //NYC // 3, //USA
-            center: toCenter(qs) || [-107,43], //[-74.4714737, 40.4724525], // NYC // [-107,43], // USA
-            container: 'map'
-        }),
-        menuButton = document.getElementById('menu-button');
+    map = new mapboxgl.Map({
+        style: 'mapbox://styles/mapbox/light-v9',
+        zoom: qs['zoom'] || 3, // 9, //NYC // 3, //USA
+        center: toCenter(qs) || [-107,43], //[-74.4714737, 40.4724525], // NYC // [-107,43], // USA
+        container: 'map'
+    });
 
     map.on('load', onLoad);
+
+    function toggleZoomNote() {
+        var zoomNoteText = document.getElementById('zoom-note-text');
+
+        zoomNoteText.hidden = !zoomNoteText.hidden;
+
+        if(zoomNoteText.hidden) {
+            zoomNoteButton.classList.add('zoom-note-button-inactive');
+            zoomNoteButton.classList.remove('zoom-note-button-active');
+        }
+        else {
+            zoomNoteButton.classList.add('zoom-note-button-active');
+            zoomNoteButton.classList.remove('zoom-note-button-inactive');
+        }
+
+        return;
+    }
+
+    zoomNoteButton.onclick = toggleZoomNote;
+    toggleZoomNote();
 
     function hideMenu() {
         var menu = document.getElementById('menu');
