@@ -16,4 +16,14 @@ public class Pages {
     public String map(){
         return "tile";
     }
+
+    @GetMapping("/tile")
+    public String tile(){
+        return "single-tile";
+    }
+
+    @GetMapping("/tiles")
+    public String tiles(){
+        return "tiles";
+    }
 }
