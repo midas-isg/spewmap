@@ -17,7 +17,7 @@
             padding:0;
             font-family: 'Open Sans', sans-serif;
             color: whitesmoke;
-            background-color: #0d4d6cbb;
+            background-color: #0d4d6c80;
             border-radius: 5px;
         }
 
@@ -86,11 +86,12 @@
         #features {
             background: inherit;
             color: inherit;
+            border-radius: inherit;
             position: absolute;
             top: 60px;
             right: 3px;
             bottom: 82px;
-            width: 300px;
+            width: 304px;
             overflow: auto;
             z-index: 1;
         }
@@ -714,7 +715,7 @@
                 var area = turf.area(featureCollection);
                 // restrict to area to 2 decimal points
                 var rounded_area = Math.round(area*100)/100;
-                answer.innerHTML = '<span> The area of your polygon(s) is <strong>' + rounded_area + '</strong> square meters</span>';
+                //answer.innerHTML = '<span> The area of your polygon(s) is <strong>' + rounded_area + '</strong> square meters</span>';
                 var url = CONTEXT + '/summarize';
                 var combined = turf.combine(featureCollection);
                 var geometry = combined.features[0].geometry;
