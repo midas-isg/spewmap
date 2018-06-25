@@ -17,6 +17,28 @@
             height: 36px;
         }
 
+        .mapboxgl-popup {
+            color: inherit;
+            border-radius: inherit;
+            width: 50%;
+        }
+
+        .mapboxgl-popup-content {
+            background-color: #0d4d6c80;
+            color: inherit;
+            border-radius: inherit;
+        }
+
+        .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+            border-top-color: #0d4d6c80;
+        }
+
+        .mapboxgl-popup-close-button,
+        .mapboxgl-popup-close-button:hover {
+            background-color: #f25934;
+            color: inherit;
+        }
+
         body {
             margin:0;
             padding:0;
@@ -128,7 +150,15 @@
             right: 3px;
         }
 
-        #map { position:absolute; top:0; bottom:0; width:100%; }
+        #map {
+            background-color: inherit;
+            color: inherit;
+            border-radius: inherit;
+            position:absolute;
+            top:0;
+            bottom:0;
+            width:100%;
+        }
 
         #map canvas {
             /*cursor: crosshair; !* Get features under the mouse pointer *!*/
@@ -625,16 +655,21 @@
 
         function makeLayerClickable(id, srcId) {
             map.on('click', id, function (e) {
-                var coordinates = e.features[0].geometry.coordinates.slice();
+                var coordinates = e.features[0].geometry.coordinates.slice(),
+                    popup = document.createElement('div');
+
+                popup.innerHTML = '<span>' + html(e) + '</span>';
+
                 // Ensure that if the map is zoomed out such that multiple
                 // copies of the feature are visible, the popup appears
                 // over the copy being pointed to.
                 while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
                     coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
                 }
+
                 new mapboxgl.Popup()
                     .setLngLat(coordinates)
-                    .setHTML(html(e))
+                    .setDOMContent(popup)
                     .addTo(map);
             });
             map.on('mouseenter', id, function () {
@@ -645,9 +680,11 @@
             });
 
             function html(e) {
-                var obj = e.features[0].properties;
-                var html = '';
-                for (var k in obj) {
+                var obj = e.features[0].properties,
+                    html = '',
+                    k;
+
+                for (k in obj) {
                     if (obj.hasOwnProperty(k))
                         html += ' <b>' + k + '</b>:' + obj[k];
                 }
