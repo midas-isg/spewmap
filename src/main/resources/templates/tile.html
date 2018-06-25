@@ -89,16 +89,32 @@
 
         /* https://www.mapbox.com/mapbox-gl-js/example/queryrenderedfeatures/ */
         #features {
+            color: inherit;
+            border-radius: inherit;
+            width: 304px;
+            overflow: auto;
+        }
+
+        #features-close-button {
+            border-radius: inherit;
+            color: inherit;
+            background-color: #f25934;
+            border-style: solid;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            position: absolute;
+            right: 0px;
+        }
+
+        #features-container {
             background: inherit;
             color: inherit;
             border-radius: inherit;
-            position: absolute;
-            top: 60px;
-            right: 3px;
-            bottom: 82px;
-            width: 304px;
-            overflow: auto;
             z-index: 1;
+            position: absolute;
+            top: 73px;
+            right: 3px;
         }
 
         #legend-panel {
@@ -202,10 +218,14 @@
     <nav id='menu'></nav>
 </div>
 
-    <div id='legend-panel'></div>
+<div id='legend-panel'></div>
 
-<pre id='features' style='display: none'></pre>
-<!--<pre id='features'></pre> &lt;!&ndash;Get features under the mouse pointer&ndash;&gt;-->
+<div id='features-container'>
+    <button id='features-close-button' hidden>x</button>
+    <pre id='features' style='display: none'></pre>
+    <!--<pre id='features'></pre> &lt;!&ndash;Get features under the mouse pointer&ndash;&gt;-->
+</div>
+
 <div class='' id='copyright'>
     <div id='product-name'><span><strong>© SPEWMap</strong></span></div>
     <div><span><i>Copyright 2018. University of Pittsburgh, Carnegie Mellon University.</i></span></div>
@@ -707,15 +727,20 @@
         map.on('draw.update', updateQueryResult);
 
         function updateQueryResult(e) {
-            var features = document.getElementById('features');
-            var featureCollection = draw.getAll();
-            var answer = document.getElementById('calculated-area');
+            var features = document.getElementById('features'),
+                closeButton = document.getElementById('features-close-button'),
+                featureCollection = draw.getAll(),
+                answer = document.getElementById('calculated-area');
+
             if (featureCollection.features.length > 0) {
-                features.onclick = function(){
+                closeButton.onclick = function(){
+                    closeButton.hidden = true;
                     tokenForSummary.cancel();
                     draw.deleteAll();
                     updateQueryResult(null);
                 };
+
+                closeButton.hidden = false;
                 features.style.display = 'block';
                 var area = turf.area(featureCollection);
                 // restrict to area to 2 decimal points
@@ -724,6 +749,7 @@
                 var url = CONTEXT + '/summarize';
                 var combined = turf.combine(featureCollection);
                 var geometry = combined.features[0].geometry;
+
                 features.innerHTML = "<b>Please wait...</b> <br/> <br/>Loading with the below query: <br/>" + JSON.stringify(geometry, null, 1);
                 tokenForSummary.cancel();
                 Rx.Observable.fromPromise(postWithCancel(url, tokenForSummary, geometry))
@@ -731,9 +757,12 @@
                         console.log(response);
                         features.innerHTML = "<b>Result of the querying polgon(s):</b><br/>" + JSON.stringify(JSON.parse(response), null, 2);
                     });
-            } else {
+            }
+            else {
                 answer.innerHTML = '';
                 features.style.display = 'none';
+                closeButton.hidden = true;
+
                 if (e && e.type !== 'draw.delete') alert("Use the draw tools to draw a polygon!");
             }
         }
