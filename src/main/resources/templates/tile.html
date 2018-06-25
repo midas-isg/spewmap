@@ -20,17 +20,17 @@
         .mapboxgl-popup {
             color: inherit;
             border-radius: inherit;
-            width: 50%;
+            max-width: 50%;
         }
 
         .mapboxgl-popup-content {
-            background-color: #0d4d6c80;
+            background-color: #000000c0;
             color: inherit;
             border-radius: inherit;
         }
 
         .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
-            border-top-color: #0d4d6c80;
+            border-top-color: #000000c0;
         }
 
         .mapboxgl-popup-close-button,
@@ -44,7 +44,7 @@
             padding:0;
             font-family: 'Open Sans', sans-serif;
             color: whitesmoke;
-            background-color: #0d4d6c80;
+            background-color: #000000c0;
             border-radius: 5px;
         }
 
@@ -187,13 +187,13 @@
         }
 
         #menu a:hover {
-            background-color: #0d4d6c40;
+            background-color: #00000060;
             color: whitesmoke;
         }
 
         #menu a.active:hover,
         #menu a.active {
-            background-color: #0d4d6c80;
+            background-color: #000000c0;
             color: whitesmoke;
         }
 
@@ -686,7 +686,7 @@
 
                 for (k in obj) {
                     if (obj.hasOwnProperty(k))
-                        html += ' <b>' + k + '</b>:' + obj[k];
+                        html += '<div><span><b>' + k + '</b>:' + obj[k] + '</span></div>';
                 }
                 return html;
             }
