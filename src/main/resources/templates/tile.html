@@ -293,6 +293,22 @@
         map,
         menuButton = document.getElementById('menu-button'),
         zoomNoteButton = document.getElementById('zoom-note-button'),
+        REMAPPED_LABELS = {
+            "age": {
+                "label": "householder age",
+                "use": "ages"
+            },
+            "hid": {
+                "label": "household id"
+            },
+            "race": {
+                "label": "householder race",
+                "use": "races"
+            },
+            "persons": {
+                "label": "size (occupants)"
+            }
+        },
         SPEW_US_FORMAT = {
             employments: {
                 "null": "N/A (less than 16 years old)",
@@ -769,19 +785,35 @@
                     html = '',
                     k,
                     values,
-                    i;
+                    i,
+                    label,
+                    category;
 
                 for (k in obj) {
                     if (obj.hasOwnProperty(k)) {
-                        html += '<div><span><b>' + k + '</b>: ';
+                        category = k;
 
-                        if(SPEW_US_FORMAT[k]) {
-                            values = obj[k].substring(1, obj[k].length - 1).split(',');
+                        if(REMAPPED_LABELS[k]) {
+                            label = REMAPPED_LABELS[k]['label'];
+
+                            if(REMAPPED_LABELS[k]['use']) {
+                                category = REMAPPED_LABELS[k]['use'];
+                            }
+                        }
+                        else {
+                            label = k;
+                        }
+
+                        html += '<div><span><b>' + label + '</b>: ';
+
+                        if(SPEW_US_FORMAT[category]) {
+                            values = obj[k].toString();
+                            values = values.substring(1, obj[k].length - 1).split(',');
                             html += '[ ';
 
                             for(i = 0; i < values.length; i++) {
-                                if(SPEW_US_FORMAT[k][values[i]]) {
-                                    html += SPEW_US_FORMAT[k][values[i]] + '; ';
+                                if(SPEW_US_FORMAT[category][values[i]]) {
+                                    html += SPEW_US_FORMAT[category][values[i]] + '; ';
                                 }
                                 else {
                                     html += values[i] + '; ';
