@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset='utf-8' />
     <title>SPEW Map</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
     <script src='//cdnjs.cloudflare.com/ajax/libs/rxjs/5.5.10/Rx.min.js'></script>
+    <script th:src='@{js/bbox.geojson.js}'></script>
 
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.45.0/mapbox-gl.js'></script>
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.45.0/mapbox-gl.css' rel='stylesheet' />
@@ -144,6 +145,7 @@
 </div>
 <script>
     "use strict";
+    console.log(geojson);
     var CONTEXT = '/spewmap/households/api';
     var theZoom = 14;
     var tokenForSummary = {cancel: function(){}};
