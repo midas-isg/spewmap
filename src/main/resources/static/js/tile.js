@@ -438,14 +438,23 @@
 						if(SPEW_US_FORMAT[category]) {
 							values = obj[k].toString();
 							values = values.substring(1, obj[k].length - 1).split(',');
-							html += '[ ';
+							html += '[';
 							
-							for(i = 0; i < values.length; i++) {
+							if(SPEW_US_FORMAT[category][values[0]]) {
+								html += SPEW_US_FORMAT[category][values[0]];
+							}
+							else {
+								html += values[0];
+							}
+							
+							for(i = 1; i < values.length; i++) {
+								html += ', ';
+								
 								if(SPEW_US_FORMAT[category][values[i]]) {
-									html += SPEW_US_FORMAT[category][values[i]] + '; ';
+									html += SPEW_US_FORMAT[category][values[i]];
 								}
 								else {
-									html += values[i] + '; ';
+									html += values[i];
 								}
 							}
 							
@@ -701,7 +710,19 @@
 		return new Promise(
 			function (resolve, reject) {
 				request.onload = function () {
-					resolve(request.responseText);
+					var parsedResponse = JSON.parse(request.responseText),
+						k;
+					
+					for(k in parsedResponse) {
+						if(parsedResponse.hasOwnProperty(k)) {
+							if(REMAPPED_LABELS[k]) {
+								parsedResponse[REMAPPED_LABELS[k]['label']] = parsedResponse[k];
+								delete parsedResponse[k];
+							}
+						}
+					}
+					
+					resolve(JSON.stringify(parsedResponse));
 				};
 				token.cancel = function () {
 					request.abort();
