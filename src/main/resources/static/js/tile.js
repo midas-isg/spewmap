@@ -438,7 +438,10 @@
 						if(SPEW_US_FORMAT[category]) {
 							values = obj[k].toString();
 							values = values.substring(1, obj[k].length - 1).split(',');
-							html += '[';
+							
+							if(values.length > 1) {
+								html += '[';
+							}
 							
 							if(SPEW_US_FORMAT[category][values[0]]) {
 								html += SPEW_US_FORMAT[category][values[0]];
@@ -458,7 +461,9 @@
 								}
 							}
 							
-							html += ']';
+							if(values.length > 1) {
+								html += ']';
+							}
 						}
 						else {
 							html += obj[k];
