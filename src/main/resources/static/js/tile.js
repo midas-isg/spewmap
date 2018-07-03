@@ -266,11 +266,12 @@
 			
 			if(typeof(circleColor) === "string") {
 				header = document.createElement('td');
-				header.classList.add("legendtext");
+				header.classList.add("legend-cell");
 				header.style.textAlign = "center";
 				header.innerHTML = legendID;
 				
 				content = document.createElement('td');
+				content.classList.add('legend-cell');
 				bubbleCell = document.createElement('div');
 				bubbleCell.classList.add("bubblecell");
 				bubbleCell.style.textAlign = "center";
@@ -286,10 +287,11 @@
 			else {
 				for(i = 2; i < circleColor.length; i += 2) {
 					header = document.createElement('td');
-					header.classList.add("legendtext");
+					header.classList.add("legend-cell");
 					header.style.textAlign = "center";
 					
 					content = document.createElement('td');
+					content.classList.add("legend-cell");
 					bubbleCell = document.createElement('div');
 					bubbleCell.classList.add("bubblecell");
 					bubbleCell.style.textAlign = "center";

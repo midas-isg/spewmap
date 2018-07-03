@@ -78,6 +78,10 @@ body {
     margin-right: auto;
 }
 
+.legend-cell {
+    min-width: 20px;
+}
+
 .zoom-note {
     background-color: #f25934;
     color: inherit;
