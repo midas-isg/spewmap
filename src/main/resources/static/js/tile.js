@@ -435,7 +435,17 @@
 							label = k;
 						}
 						
-						html += '<div><span><b>' + label + '</b>: ';
+						label = label.charAt(0).toUpperCase() + label.substring(1);
+						html += '<div>';
+						
+						if(SPEW_FORMAT.CODES[category]){
+							html += '<span title="' + SPEW_FORMAT.CODES[category] + '">';
+						}
+						else {
+							html += '<span>';
+						}
+						
+						html += '<b>' + label + '</b></span>: ';
 						
 						if(SPEW_US_FORMAT[category]) {
 							values = obj[k].toString();
@@ -445,22 +455,40 @@
 								html += '[';
 							}
 							
-							if(SPEW_US_FORMAT[category][values[0]]) {
-								html += SPEW_US_FORMAT[category][values[0]];
+							if(SPEW_US_FORMAT[category][values[0]]['original']){
+								html += '<span title="' + SPEW_US_FORMAT[category][values[0]]['original'] + '">';
+							}
+							else {
+								html += '<span>';
+							}
+							
+							if(SPEW_US_FORMAT[category][values[0]]['concise']) {
+								html += SPEW_US_FORMAT[category][values[0]]['concise'];
 							}
 							else {
 								html += values[0];
 							}
 							
+							html += '</span>';
+							
 							for(i = 1; i < values.length; i++) {
 								html += ', ';
 								
-								if(SPEW_US_FORMAT[category][values[i]]) {
-									html += SPEW_US_FORMAT[category][values[i]];
+								if(SPEW_US_FORMAT[category][values[i]]['original']){
+									html += '<span title="' + SPEW_US_FORMAT[category][values[i]]['original'] + '">';
+								}
+								else {
+									html += '<span>';
+								}
+								
+								if(SPEW_US_FORMAT[category][values[i]]['concise']) {
+									html += SPEW_US_FORMAT[category][values[i]]['concise'];
 								}
 								else {
 									html += values[i];
 								}
+								
+								html += '</span>';
 							}
 							
 							if(values.length > 1) {
@@ -471,7 +499,7 @@
 							html += obj[k];
 						}
 						
-						html += '</span></div>';
+						html += '</div>';
 					}
 				}
 				return html;
