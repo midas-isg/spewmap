@@ -7,17 +7,20 @@ var SPEW_FORMAT = {
 		"hid": {
 			"label": "Household ID"
 		},
+		"persons": {
+			"label": "Size (Occupants)"
+		},
 		"race": {
 			"label": "Householder Race",
 			"use": "races"
 		},
-		"persons": {
-			"label": "Size (Occupants)"
+		"serialno": {
+			"label": "Serial #"
 		}
 	},
 	CODES: {
 		"ages": "AGE",
-		"puma": "PUMA_ID",
+		"puma": "PUMA",
 		"year": "YEAR",
 		"races": "RACE",
 		"sexes": "SEX",
@@ -33,6 +36,12 @@ var SPEW_FORMAT = {
 		"relationships": "RELP"
 	},
 	SPEW_US_FORMAT: {
+		country: {
+			"840" : {
+				"original": "840",
+				"concise": "USA"
+			}
+		},
 		employments: {
 			"null": {
 				"original": "N/A (less than 16 years old)",

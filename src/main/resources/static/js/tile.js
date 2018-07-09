@@ -449,7 +449,13 @@
 						
 						if(SPEW_US_FORMAT[category]) {
 							values = obj[k].toString();
-							values = values.substring(1, obj[k].length - 1).split(',');
+							
+							if(values.charAt(0) === '[') {
+								values = values.substring(1, obj[k].length - 1).split(',');
+							}
+							else {
+								values = [values];
+							}
 							
 							if(values.length > 1) {
 								html += '[';
