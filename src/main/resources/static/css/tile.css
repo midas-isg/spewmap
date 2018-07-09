@@ -1,0 +1,244 @@
+
+.mapboxgl-ctrl-group > button {
+    width: 36px;
+    height: 36px;
+}
+
+.mapboxgl-popup {
+    color: inherit;
+    border-radius: inherit;
+    max-width: 50%;
+}
+
+.mapboxgl-popup-content {
+    background-color: #000000c0;
+    color: inherit;
+    border-radius: inherit;
+}
+
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+    border-top-color: #000000c0;
+    border-bottom-color: #000000c0;
+}
+
+.mapboxgl-popup-anchor-left .mapboxgl-popup-tip,
+.mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+    border-left-color: #000000c0;
+    border-right-color: #000000c0;
+}
+
+.mapboxgl-popup-close-button,
+.mapboxgl-popup-close-button:hover {
+    background-color: #f25934;
+    color: inherit;
+}
+
+body {
+    margin:0;
+    padding:0;
+    font-family: 'Open Sans', sans-serif;
+    color: whitesmoke;
+    background-color: #000000c0;
+    border-radius: 5px;
+}
+
+.bubblecell {
+    height: 4px;
+    width: 4px;
+    margin: auto;
+    padding: 2px;
+    border-radius: 10px;
+}
+
+/* Show drawn polygon area */
+.calculation-box {
+    background-color: inherit;
+    color: inherit;
+    position: absolute;
+    border-radius: 5px;
+    bottom: 5px;
+    left: 95px;
+    padding: 3px;
+    transform: translate(0%, 0%);
+}
+
+.legend {
+    border-radius: inherit;
+    padding: 0px;
+    transform: translate(0%, 0%);
+}
+
+.legend table {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.legend-cell {
+    min-width: 20px;
+}
+
+.zoom-note {
+    background-color: #f25934;
+    color: inherit;
+    border-radius: 15px;
+    position: absolute;
+    top: 42px;
+    right: 3px;
+}
+
+.zoom-note-button-active {
+    background-color: whitesmoke;
+}
+
+.zoom-note-button-inactive {
+    border-color: #f25934;
+    color: #f25934;
+    background-color: #ffffff;
+}
+
+#copyright {
+    background-color: inherit;
+    color: inherit;
+    border-radius: inherit;
+    font-size: x-small;
+    position: absolute;
+    right: 3px;
+    top: 10px;
+    width: 320px;
+    padding: 2px;
+}
+
+/* https://www.mapbox.com/mapbox-gl-js/example/queryrenderedfeatures/ */
+#features {
+    color: inherit;
+    border-radius: inherit;
+    width: 320px;
+    overflow: auto;
+}
+
+#features-close-button {
+    border-radius: inherit;
+    color: inherit;
+    background-color: #f25934;
+    border-style: solid;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    position: absolute;
+    right: 0px;
+}
+
+#features-container {
+    background: inherit;
+    color: inherit;
+    border-radius: inherit;
+    z-index: 1;
+    position: absolute;
+    top: 75px;
+    right: 3px;
+    max-height: 560px;
+}
+
+#legend-panel {
+    background-color: inherit;
+    color: inherit;
+    border-radius: inherit;
+    display: inline-block;
+    position: absolute;
+    bottom: 36px;
+    right: 3px;
+}
+
+#map {
+    background-color: inherit;
+    color: inherit;
+    border-radius: inherit;
+    position:absolute;
+    top:0;
+    bottom:0;
+    width:100%;
+}
+
+#map canvas {
+    /*cursor: crosshair; !* Get features under the mouse pointer *!*/
+}
+
+/* https://www.mapbox.com/mapbox-gl-js/example/toggle-layers/ */
+#menu {
+    border-radius: 3px;
+    display: inline-block;
+}
+
+#menu a {
+    color: inherit;
+    border-radius: inherit;
+    font-size: 13px;
+    display: block;
+    margin: 0;
+    padding: 10px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0,0,0,0.25);
+    text-align: center;
+}
+
+#menu a:last-child {
+    border: none;
+}
+
+#menu a:hover {
+    background-color: #00000060;
+    color: whitesmoke;
+}
+
+#menu a.active:hover,
+#menu a.active {
+    background-color: #000000c0;
+    color: whitesmoke;
+}
+
+#menu-button {
+    border-radius: inherit;
+    background-color: whitesmoke;
+    border-style: solid;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    display: block;
+}
+
+#menu-panel {
+    background-color: whitesmoke;
+    color: black;
+    border-radius: inherit;
+    display: inline-block;
+    position: absolute;
+    bottom: 36px;
+    margin-left: 10px;
+}
+
+#product-name {
+    font-size: small;
+}
+
+#zoom-note-button {
+    border-radius: inherit;
+    border-style: solid;
+    outline: none;
+    cursor: pointer;
+    font-size: large;
+    padding-top: 0px;
+    padding-left: 5px;
+    font-weight: 900;
+    width: 30px;
+}
+
+#zoom-note-text {
+    vertical-align: middle;
+    font-size: small;
+    padding-left: 5px;
+}
