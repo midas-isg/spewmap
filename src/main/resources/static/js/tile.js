@@ -385,12 +385,20 @@
 			addLegend(id, circleColor, categoryValues);
 		}
 		
+		//This may need refactored as it sometimes doesn't register clicks
 		function makeLayerClickable(id, srcId) {
 			map.on('click', id, function (e) {
 				var coordinates = e.features[0].geometry.coordinates.slice(),
-					popup = document.createElement('div');
+					popup = document.createElement('div'),
+					tabButton,
+					tabs = [
+						'human-readable',
+						'individuals',
+						'raw-data'
+					],
+					i;
 				
-				popup.innerHTML = '<span>' + html(e) + '</span>';
+				popup.innerHTML =  html(e);
 				
 				// Ensure that if the map is zoomed out such that multiple
 				// copies of the feature are visible, the popup appears
@@ -403,6 +411,36 @@
 				.setLngLat(coordinates)
 				.setDOMContent(popup)
 				.addTo(map);
+				
+				for(i = 0; i < tabs.length; i++) {
+					tabButton = document.getElementById(tabs[i] + '-button');
+					
+					(function(id){
+						tabButton.onclick = function() {
+							var tab,
+								tabToggleButton,
+								j;
+							
+							for(j = 0; j < tabs.length; j++) {
+								tab = document.getElementById(tabs[j] + '-tab');
+								tabToggleButton = document.getElementById(tabs[j] + '-button');
+								
+								tab.hidden = (tabs[j] !== id);
+								
+								if(tabs[j] === id) {
+									tabToggleButton.classList.add('active-tab-button');
+									tabToggleButton.classList.remove('tab-button');
+								}
+								else {
+									tabToggleButton.classList.remove('active-tab-button');
+									tabToggleButton.classList.add('tab-button');
+								}
+							}
+							
+							return;
+						};
+					})(tabs[i]);
+				}
 			});
 			map.on('mouseenter', id, function () {
 				map.getCanvas().style.cursor = 'pointer';
@@ -416,12 +454,31 @@
 					html = '',
 					k,
 					values,
+					householdSize,
 					i,
 					label,
-					category;
+					category,
+					raw = {},
+					readable = {},
+					code;
+				
+				html += '<div id="human-readable-button" class="active-tab-button">Household</div>';
+				html += '<div id="individuals-button" class="tab-button">Individual</div>';
+				html += '<div id="raw-data-button" class="tab-button">Raw</div>';
+				
+				html += '<div id="human-readable-tab">';
 				
 				for (k in obj) {
 					if (obj.hasOwnProperty(k)) {
+						values = obj[k].toString();
+						
+						if(values.charAt(0) === '[') {
+							values = values.substring(1, obj[k].length - 1).split(',');
+						}
+						else {
+							values = [values];
+						}
+						
 						category = k;
 						
 						if(REMAPPED_LABELS[k]) {
@@ -435,28 +492,40 @@
 							label = k;
 						}
 						
-						label = label.charAt(0).toUpperCase() + label.substring(1);
-						html += '<div>';
-						
-						if(SPEW_FORMAT.CODES[category]){
-							html += '<span title="' + SPEW_FORMAT.CODES[category] + '">';
+						if(SPEW_FORMAT.CODES[category]) {
+							code = SPEW_FORMAT.CODES[category];
 						}
 						else {
-							html += '<span>';
+							code = k;
 						}
 						
+						label = label.charAt(0).toUpperCase() + label.substring(1);
+						
+						//Parse data
+						raw[code] = [];
+						readable[label] = [];
+						for(i = 0; i < values.length; i++) {
+							if(SPEW_US_FORMAT[category] && SPEW_US_FORMAT[category][values[i]]['concise']){
+								readable[label].push(SPEW_US_FORMAT[category][values[i]]['concise']);
+							}
+							else {
+								readable[label].push(values[i]);
+							}
+							
+							if(values[i] !== "null"){
+								raw[code].push(parseInt(values[i]));
+							}
+							else {
+								raw[code].push(null);
+							}
+						}
+						
+						//Make the human-readable tab rows
+						html += '<div>';
+						html += '<span title="' + code + '">';
 						html += '<b>' + label + '</b></span>: ';
 						
 						if(SPEW_US_FORMAT[category]) {
-							values = obj[k].toString();
-							
-							if(values.charAt(0) === '[') {
-								values = values.substring(1, obj[k].length - 1).split(',');
-							}
-							else {
-								values = [values];
-							}
-							
 							if(values.length > 1) {
 								html += '[';
 							}
@@ -468,14 +537,7 @@
 								html += '<span>';
 							}
 							
-							if(SPEW_US_FORMAT[category][values[0]]['concise']) {
-								html += SPEW_US_FORMAT[category][values[0]]['concise'];
-							}
-							else {
-								html += values[0];
-							}
-							
-							html += '</span>';
+							html += readable[label][0] + '</span>';
 							
 							for(i = 1; i < values.length; i++) {
 								html += ', ';
@@ -487,14 +549,7 @@
 									html += '<span>';
 								}
 								
-								if(SPEW_US_FORMAT[category][values[i]]['concise']) {
-									html += SPEW_US_FORMAT[category][values[i]]['concise'];
-								}
-								else {
-									html += values[i];
-								}
-								
-								html += '</span>';
+								html += readable[label][i] + '</span>';
 							}
 							
 							if(values.length > 1) {
@@ -508,6 +563,45 @@
 						html += '</div>';
 					}
 				}
+				
+				html += '</div>';
+				
+console.log(raw);
+console.log(readable);
+				
+				//make the raw data tab
+				html += '<div id="raw-data-tab" hidden>';
+				for(k in raw) {
+					if(raw.hasOwnProperty(k)) {
+						html += '<div><span>' + k + '</span>: <span>[';
+						
+						html += raw[k][0];
+						for(i = 1; i < raw[k].length; i++) {
+							html += ', ' + raw[k][i];
+						}
+						
+						html += ']</span></div>';
+					}
+				}
+				
+				//make the individuals tab
+				html += '</div><div id="individuals-tab" hidden>[';
+				householdSize = parseInt(raw['NP']);
+				
+				for(i = 0; i < householdSize; i++) {
+					html += '<div>&emsp;{</div>';
+					
+					for(k in readable) {
+						if(readable.hasOwnProperty(k) && (readable[k].length === householdSize)) {
+							html += '<div>&emsp;&emsp;' + k + ':' + readable[k][i] + '</div>';
+						}
+					}
+					
+					html += '<div>&emsp;}</div>';
+				}
+				
+				html += ']</div>';
+				
 				return html;
 			}
 		}
