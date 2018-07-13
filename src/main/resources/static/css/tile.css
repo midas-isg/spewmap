@@ -7,13 +7,15 @@
 .mapboxgl-popup {
     color: inherit;
     border-radius: inherit;
-    max-width: 50%;
+    width: 66%;
 }
 
 .mapboxgl-popup-content {
     background-color: #000000c0;
     color: inherit;
     border-radius: inherit;
+    padding-top: 2px;
+    padding-right: 0px;
 }
 
 .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
@@ -36,6 +38,9 @@
 .mapboxgl-popup-close-button:hover {
     background-color: #f25934;
     color: inherit;
+    width: 17px;
+    padding-left: 5px;
+    padding-right: 5px;
 }
 
 body {
@@ -59,11 +64,11 @@ body {
     border-style: solid;
     border-color: whitesmoke;
     display: inline-block;
-    padding: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
     border-top-width: 1px;
     border-left-width: 1px;
     border-right-width: 1px;
-    margin-bottom: 2px;
     cursor: pointer;
 }
 
@@ -247,6 +252,11 @@ body {
 
 #product-name {
     font-size: small;
+}
+
+#tab-content {
+    height: 300px;
+    overflow-y: auto;
 }
 
 #zoom-note-button {

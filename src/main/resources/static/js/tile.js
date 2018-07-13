@@ -466,6 +466,7 @@
 				html += '<div id="individuals-button" class="tab-button">Individual</div>';
 				html += '<div id="raw-data-button" class="tab-button">Raw</div>';
 				
+				html += '<div id="tab-content">';
 				html += '<div id="human-readable-tab">';
 				
 				for (k in obj) {
@@ -566,14 +567,11 @@
 				
 				html += '</div>';
 				
-console.log(raw);
-console.log(readable);
-				
 				//make the raw data tab
 				html += '<div id="raw-data-tab" hidden>';
 				for(k in raw) {
 					if(raw.hasOwnProperty(k)) {
-						html += '<div><span>' + k + '</span>: <span>[';
+						html += '<div><strong>' + k + '</strong>: <span>[';
 						
 						html += raw[k][0];
 						for(i = 1; i < raw[k].length; i++) {
@@ -593,14 +591,14 @@ console.log(readable);
 					
 					for(k in readable) {
 						if(readable.hasOwnProperty(k) && (readable[k].length === householdSize)) {
-							html += '<div>&emsp;&emsp;' + k + ':' + readable[k][i] + '</div>';
+							html += '<div>&emsp;&emsp;<strong>' + k + '</strong>:' + readable[k][i] + '</div>';
 						}
 					}
 					
 					html += '<div>&emsp;}</div>';
 				}
 				
-				html += ']</div>';
+				html += ']</div></div>';
 				
 				return html;
 			}
