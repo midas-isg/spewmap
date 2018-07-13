@@ -16,6 +16,7 @@
     border-radius: inherit;
     padding-top: 2px;
     padding-right: 0px;
+    padding-left: 0px;
 }
 
 .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
@@ -38,9 +39,8 @@
 .mapboxgl-popup-close-button:hover {
     background-color: #f25934;
     color: inherit;
-    width: 17px;
-    padding-left: 5px;
-    padding-right: 5px;
+    width: 23px;
+    height: 23px;
 }
 
 body {
@@ -53,8 +53,9 @@ body {
 }
 
 .active-tab-button {
-    border-bottom-width: 0px;
     font-weight: bold;
+    color: black;
+    background-color: whitesmoke;
 }
 
 .active-tab-button,
@@ -69,11 +70,12 @@ body {
     border-top-width: 1px;
     border-left-width: 1px;
     border-right-width: 1px;
+    border-bottom-width: 0px;
     cursor: pointer;
 }
 
 .tab-button {
-    border-bottom-width: 1px;
+    /**/
 }
 
 .bubblecell {
@@ -257,6 +259,9 @@ body {
 #tab-content {
     height: 300px;
     overflow-y: auto;
+    border-top-style: dotted;
+    border-width: 1px;
+    padding-left: 3px;
 }
 
 #zoom-note-button {
