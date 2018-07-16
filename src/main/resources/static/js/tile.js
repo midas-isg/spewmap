@@ -125,13 +125,19 @@
 	}
 	
 	function addCircleLayers(srcId) {
-		var ageId = 'Householder Age';
-		var raceId = 'Householder Race';
-		var hhPersonsId = 'Size (Occupants)';
-		var hhIncomeId = 'Income';
-		var hhId = 'Household';
-		var toggleableLayerIds = [ageId,
-			raceId, hhPersonsId, hhIncomeId, hhId];
+		var popup,
+			ageId = 'Householder Age',
+			raceId = 'Householder Race',
+			hhPersonsId = 'Size (Occupants)',
+			hhIncomeId = 'Income',
+			hhId = 'Household',
+			toggleableLayerIds = [
+				ageId,
+				raceId,
+				hhPersonsId,
+				hhIncomeId,
+				hhId
+			];
 		
 		addAgeTileLayer(ageId, srcId);
 		addRaceTileLayer(raceId, srcId);
@@ -385,11 +391,10 @@
 			addLegend(id, circleColor, categoryValues);
 		}
 		
-		//This may need refactored as it sometimes doesn't register clicks
 		function makeLayerClickable(id, srcId) {
 			map.on('click', id, function (e) {
 				var coordinates = e.features[0].geometry.coordinates.slice(),
-					popup = document.createElement('div'),
+					popupContent = document.createElement('div'),
 					tabButton,
 					tabs = [
 						'human-readable',
@@ -398,7 +403,7 @@
 					],
 					i;
 				
-				popup.innerHTML =  html(e);
+				popupContent.innerHTML =  html(e);
 				
 				// Ensure that if the map is zoomed out such that multiple
 				// copies of the feature are visible, the popup appears
@@ -407,10 +412,14 @@
 					coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
 				}
 				
-				new mapboxgl.Popup()
-				.setLngLat(coordinates)
-				.setDOMContent(popup)
-				.addTo(map);
+				if(popup) {
+					popup.remove();
+				}
+				
+				popup = new mapboxgl.Popup()
+					.setLngLat(coordinates)
+					.setDOMContent(popupContent)
+					.addTo(map);
 				
 				for(i = 0; i < tabs.length; i++) {
 					tabButton = document.getElementById(tabs[i] + '-button');
