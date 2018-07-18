@@ -84,15 +84,20 @@
 		addTheLabelLayer(srcId);
 		
 		function onZoomend(){
-			var zoom = map.getZoom();
+			var zoom = map.getZoom(),
+				zoomLabel = document.getElementById('zoom-level'),
+				zoomNote = document.getElementById('zoom-note');
+			
 			console.log('zoom=' + zoom + '; bbox='+ JSON.stringify(map.getBounds()));
-			var zoomLabel = document.getElementById('zoom-level');
-			var zoomNote = document.getElementById('zoom-note');
+			
 			zoomLabel.innerHTML = zoom.toFixed(5);
+			
 			if (zoom >= theZoom)
 				zoomNote.style.display = 'none';
 			else
 				zoomNote.style.display = 'block';
+			
+			return;
 		}
 		map.on('DISABLE-mouseup', function (e) { // Get features under the mouse pointer
 			var features = map.queryRenderedFeatures(e.point);
@@ -166,18 +171,28 @@
 					['get', 'race'],
 					1, 'rgb(212, 44, 44)', //1 .White alone
 					2, 'rgb(0, 169, 157)', // 2 .Black or African American alone
+					// 3 .American Indian alone
+					//4, 'rgb(255, 255, 0)',// 4 .Alaska Native alone
+					// 5 .American Indian and Alaska Native tribes specified; or American .Indian or Alaska Native, not specified and no other races
 					6, 'rgb(153, 102, 255)',  // 6 .Asian alone
-					9, '#646464', // 9 .Two or More Races
-					'rgb(170, 147, 61)' // other
+					// 7 .Native Hawaiian and Other Pacific Islander alone
+					// 8 .Some Other Race alone
+					9, '#ffa500', // 9 .Two or More Races
+					'rgb(170, 147, 61)' // Other
 				],
 				raceCategories = {
 					'mapping': {
 						1 : "White",
 						2 : "Black",
+						//3 : "American Indian",
+						//4 : "Alaskan",
+						//5 : "American Indian/Alaskan tribe specified or unspecified",
 						6 : "Asian",
-						9: "Other"
+						//7 : "Native Hawaiian and Other Pacific Islander",
+						//8 : "Other",
+						9: "Multiracial"
 					},
-					'endMapping': "Multiracial"
+					'endMapping': "Other"
 				};
 			
 			addTileLayer(raceId, srcId, circleColor, raceCategories);
@@ -392,7 +407,7 @@
 		}
 		
 		function makeLayerClickable(id, srcId) {
-			map.on('click', id, function (e) {
+			function touchClick(e) {
 				var coordinates = e.features[0].geometry.coordinates.slice(),
 					popupContent = document.createElement('div'),
 					tabButton,
@@ -417,9 +432,9 @@
 				}
 				
 				popup = new mapboxgl.Popup()
-					.setLngLat(coordinates)
-					.setDOMContent(popupContent)
-					.addTo(map);
+				.setLngLat(coordinates)
+				.setDOMContent(popupContent)
+				.addTo(map);
 				
 				for(i = 0; i < tabs.length; i++) {
 					tabButton = document.getElementById(tabs[i] + '-button');
@@ -450,7 +465,11 @@
 						};
 					})(tabs[i]);
 				}
-			});
+			}
+			
+			map.on('click', id, touchClick);
+			map.on('touchend', id, touchClick);
+			
 			map.on('mouseenter', id, function () {
 				map.getCanvas().style.cursor = 'pointer';
 			});
