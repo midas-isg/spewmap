@@ -278,6 +278,7 @@
 			legendItemTable.cellPadding = "2";
 			legendItemTable.cellSpacing = "2";
 			
+			legendTitle.classList.add("legend-title");
 			legendTitle.innerHTML = "<strong>" + categoryLegend + "</strong>";
 			
 			legendItemTable.appendChild(legendTitle);

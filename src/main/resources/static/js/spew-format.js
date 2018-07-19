@@ -35,7 +35,7 @@ var SPEW_FORMAT = {
 		"ages": "AGE",
 		"puma": "puma_id",
 		"year": "YEAR",
-		"races": "RACID",
+		"races": "RAC1P",
 		"sexes": "SEX",
 		"grades": "SCHG",
 		"hid": "SYNTHETIC_HID",
