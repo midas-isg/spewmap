@@ -7,13 +7,17 @@
 .mapboxgl-popup {
     color: inherit;
     border-radius: inherit;
-    max-width: 50%;
+    width: 66%;
 }
 
 .mapboxgl-popup-content {
     background-color: #000000c0;
     color: inherit;
     border-radius: inherit;
+    padding-top: 2px;
+    padding-right: 0px;
+    padding-left: 0px;
+    padding-bottom: 1px;
 }
 
 .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
@@ -36,6 +40,8 @@
 .mapboxgl-popup-close-button:hover {
     background-color: #f25934;
     color: inherit;
+    width: 23px;
+    height: 23px;
 }
 
 body {
@@ -45,6 +51,32 @@ body {
     color: whitesmoke;
     background-color: #000000c0;
     border-radius: 5px;
+}
+
+.active-tab-button {
+    font-weight: bold;
+    color: black;
+    background-color: whitesmoke;
+}
+
+.active-tab-button,
+.tab-button {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-style: solid;
+    border-color: whitesmoke;
+    display: inline-block;
+    padding-left: 2px;
+    padding-right: 2px;
+    border-top-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 0px;
+    cursor: pointer;
+}
+
+.tab-button {
+    /**/
 }
 
 .bubblecell {
@@ -223,6 +255,14 @@ body {
 
 #product-name {
     font-size: small;
+}
+
+#tab-content {
+    height: 300px;
+    overflow-y: auto;
+    border-top-style: dotted;
+    border-width: 1px;
+    padding-left: 3px;
 }
 
 #zoom-note-button {

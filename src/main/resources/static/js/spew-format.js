@@ -1,4 +1,14 @@
 var SPEW_FORMAT = {
+	SINGULAR_MAPPINGS: {
+		"Ages": "Age",
+		"Races": "Race",
+		"Sexes": "Sex",
+		"Grades": "Grade",
+		"Incomes": "Income",
+		"Schools": "School",
+		"Employments": "Employment",
+		"Relationships": "Relationship"
+	},
 	REMAPPED_LABELS: {
 		"age": {
 			"label": "Householder Age",
@@ -7,32 +17,45 @@ var SPEW_FORMAT = {
 		"hid": {
 			"label": "Household ID"
 		},
+		"persons": {
+			"label": "Size (Occupants)"
+		},
+		"puma": {
+			"label": "PUMA"
+		},
 		"race": {
 			"label": "Householder Race",
 			"use": "races"
 		},
-		"persons": {
-			"label": "Size (Occupants)"
+		"serialno": {
+			"label": "Serial #"
 		}
 	},
 	CODES: {
 		"ages": "AGE",
-		"puma": "PUMA_ID",
+		"puma": "puma_id",
 		"year": "YEAR",
-		"races": "RACE",
+		"races": "RACID",
 		"sexes": "SEX",
 		"grades": "SCHG",
-		"income": "INCTOT",
-		"region": "PLACE_ID",
+		"hid": "SYNTHETIC_HID",
+		"income": "HINCP",
+		"region": "place_id",
 		"country": "COUNTRY",
 		"incomes": "INCTOT",
 		"persons": "NP",
-		"schools": "SCHOOL",
+		"schools": "SCH",
 		"serialno": "SERIALNO",
 		"employments": "ESR",
 		"relationships": "RELP"
 	},
 	SPEW_US_FORMAT: {
+		country: {
+			"840" : {
+				"original": "840",
+				"concise": "USA"
+			}
+		},
 		employments: {
 			"null": {
 				"original": "N/A (less than 16 years old)",
