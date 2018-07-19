@@ -10,6 +10,9 @@ var SPEW_FORMAT = {
 		"persons": {
 			"label": "Size (Occupants)"
 		},
+		"puma": {
+			"label": "PUMA"
+		},
 		"race": {
 			"label": "Householder Race",
 			"use": "races"
@@ -20,17 +23,18 @@ var SPEW_FORMAT = {
 	},
 	CODES: {
 		"ages": "AGE",
-		"puma": "PUMA",
+		"puma": "puma_id",
 		"year": "YEAR",
-		"races": "RACE",
+		"races": "RACID",
 		"sexes": "SEX",
 		"grades": "SCHG",
-		"income": "INCTOT",
-		"region": "PLACE_ID",
+		"hid": "SYNTHETIC_HID",
+		"income": "HINCP",
+		"region": "place_id",
 		"country": "COUNTRY",
 		"incomes": "INCTOT",
 		"persons": "NP",
-		"schools": "SCHOOL",
+		"schools": "SCH",
 		"serialno": "SERIALNO",
 		"employments": "ESR",
 		"relationships": "RELP"
