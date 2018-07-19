@@ -1,4 +1,14 @@
 var SPEW_FORMAT = {
+	SINGULAR_MAPPINGS: {
+		"Ages": "Age",
+		"Races": "Race",
+		"Sexes": "Sex",
+		"Grades": "Grade",
+		"Incomes": "Income",
+		"Schools": "School",
+		"Employments": "Employment",
+		"Relationships": "Relationship"
+	},
 	REMAPPED_LABELS: {
 		"age": {
 			"label": "Householder Age",

@@ -9,6 +9,7 @@
 		menuButton = document.getElementById('menu-button'),
 		zoomNoteButton = document.getElementById('zoom-note-button'),
 		REMAPPED_LABELS = SPEW_FORMAT.REMAPPED_LABELS,
+		SINGULAR_MAPPINGS = SPEW_FORMAT.SINGULAR_MAPPINGS,
 		SPEW_US_FORMAT = SPEW_FORMAT.SPEW_US_FORMAT;
 	
 	mapboxgl.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
@@ -600,14 +601,22 @@
 				html += '<div id="raw-data-tab" hidden>';
 				for(k in raw) {
 					if(raw.hasOwnProperty(k)) {
-						html += '<div><strong>' + k + '</strong>: <span>[';
+						html += '<div><strong>' + k + '</strong>: <span>';
+						
+						if(raw[k].length > 1) {
+							html += '[';
+						}
 						
 						html += raw[k][0];
 						for(i = 1; i < raw[k].length; i++) {
 							html += ', ' + raw[k][i];
 						}
 						
-						html += ']</span></div>';
+						if(raw[k].length > 1) {
+							html += ']';
+						}
+						
+						html += '</span></div>';
 					}
 				}
 				
@@ -619,8 +628,9 @@
 					html += '<div>&emsp;{</div>';
 					
 					for(k in readable) {
-						if(readable.hasOwnProperty(k) && (readable[k].length === householdSize)) {
-							html += '<div>&emsp;&emsp;<strong>' + k + '</strong>:' + readable[k][i] + '</div>';
+						if(readable.hasOwnProperty(k) && SINGULAR_MAPPINGS[k]) {
+							html += '<div>&emsp;&emsp;<strong>' + SINGULAR_MAPPINGS[k] +
+								'</strong>: ' + readable[k][i] + '</div>';
 						}
 					}
 					
