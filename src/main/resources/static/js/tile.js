@@ -551,7 +551,8 @@
 						
 						//Make the human-readable tab rows
 						html += '<div>';
-						html += '<span title="' + code + '">';
+						//html += '<span title="' + code + '">';
+						html += '<span>';
 						html += '<b>' + label + '</b></span>: ';
 						
 						if(SPEW_US_FORMAT[category]) {
