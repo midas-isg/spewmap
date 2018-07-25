@@ -4,6 +4,17 @@
     <meta charset='utf-8' />
     <title>SPEW Map</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+<!-- Site Analytics -->
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-122846038-1"></script>
+
+    <!-- Google Analytics -->
+    <script async src='https://www.google-analytics.com/analytics.js'></script>
+
+    <script async th:src='@{js/site-analytics.js}'></script>
+<!-- End Site Analytics -->
+
     <script src='//cdnjs.cloudflare.com/ajax/libs/rxjs/5.5.10/Rx.min.js'></script>
 
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.45.0/mapbox-gl.css' rel='stylesheet' />
@@ -42,7 +53,7 @@
         <button id='zoom-note-button'>&#9888;</button>
     </div>
     <div class='calculation-box'>
-        <span></b><b>Current Zoom</b> = <span id='zoom-level'> </span></span>
+        <span><b>Current Zoom</b> = <span id='zoom-level'> </span></span>
         <span id='calculated-area'></span>
     </div>
 </body>
