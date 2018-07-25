@@ -278,6 +278,7 @@
 			legendItemTable.cellPadding = "2";
 			legendItemTable.cellSpacing = "2";
 			
+			legendTitle.classList.add("legend-title");
 			legendTitle.innerHTML = "<strong>" + categoryLegend + "</strong>";
 			
 			legendItemTable.appendChild(legendTitle);
@@ -419,6 +420,9 @@
 					],
 					i;
 				
+				//ga('send', [event], {[eventCategory], [eventAction], [eventLabel], [eventValue]});
+				ga(ANALYTICS_TRACKER + '.send', 'event', 'Map', 'click', 'click on household');
+				
 				popupContent.innerHTML =  html(e);
 				
 				// Ensure that if the map is zoomed out such that multiple
@@ -475,7 +479,7 @@
 				map.getCanvas().style.cursor = 'pointer';
 			});
 			map.on('mouseleave', id, function () {
-				map.getCanvas().style.cursor = '';
+				map.getCanvas().style.cursor = null;
 			});
 			
 			function html(e) {
@@ -644,37 +648,47 @@
 		}
 		
 		function makeCircleLayersToggleable() {
-			var id2link = {};
-			for (var i = 0; i < toggleableLayerIds.length; i++) {
-				var layerId = toggleableLayerIds[i];
+			var id2link = {},
+				layerId,
+				layers,
+				link,
+				i;
+			
+			for (i = 0; i < toggleableLayerIds.length; i++) {
+				layerId = toggleableLayerIds[i];
 				
-				var link = document.createElement('a');
+				link = document.createElement('a');
 				link.href = '#';
 				link.textContent = layerId;
 				id2link[layerId] = link;
+				
 				if (layerId !== hhId)
 					hide.call(link, layerId);
 				else
 					show.call(link, layerId);
 				
 				link.onclick = function (e) {
-					var clickedLayer = this.textContent;
+					var clickedLayer = this.textContent,
+						visibility = map.getLayoutProperty(clickedLayer, 'visibility'),
+						layer,
+						i;
 					
 					e.preventDefault();
 					e.stopPropagation();
-					var visibility = map.getLayoutProperty(clickedLayer, 'visibility');
 					
 					if (visibility === 'visible') {
 						hide.call(this, clickedLayer);
-					} else {
-						for (var i = 0; i < toggleableLayerIds.length; i++) {
-							var layer = toggleableLayerIds[i];
+					}
+					else {
+						for (i = 0; i < toggleableLayerIds.length; i++) {
+							layer = toggleableLayerIds[i];
 							hide.call(id2link[layer], layer);
 						}
 						show.call(this, clickedLayer);
 					}
 				};
-				var layers = document.getElementById('menu');
+				
+				layers = document.getElementById('menu');
 				layers.appendChild(link);
 			}
 			
@@ -693,6 +707,7 @@
 		
 		function rgbToHex(rgb) {
 			var hex = Number(rgb).toString(16);
+			
 			if (hex.length < 2) {
 				hex = '0' + hex;
 			}
@@ -700,28 +715,63 @@
 		}
 		
 		function rgb(r, g, b) {
-			var red = rgbToHex(r);
-			var green = rgbToHex(g);
-			var blue = rgbToHex(b);
+			var red = rgbToHex(r),
+				green = rgbToHex(g),
+				blue = rgbToHex(b);
+			
 			return '#' + red + green + blue;
 		}
 	}
 	
 	function addControls() {
+		var draw;
+		
 		map.addControl(new mapboxgl.NavigationControl(), 'top-left');
-		var draw = newMapboxDraw();
+		draw = newMapboxDraw();
 		map.addControl(draw, 'top-left');
-		map.on('draw.create', updateQueryResult);
-		map.on('draw.delete', updateQueryResult);
-		map.on('draw.update', updateQueryResult);
+		map.on('draw.create', function(e){
+			//ga('send', [event], {[eventCategory], [eventAction], [eventLabel], [eventValue]});
+			ga(ANALYTICS_TRACKER + '.send', 'event', 'Map', 'draw', 'create draw query');
+			updateQueryResult(e);
+			
+			return;
+		});
+		map.on('draw.delete', function(e){
+			ga(ANALYTICS_TRACKER + '.send', 'event', 'Map', 'delete', 'delete draw query');
+			updateQueryResult(e);
+			
+			return;
+		});
+		map.on('draw.update', function(e){
+			ga(ANALYTICS_TRACKER + '.send', 'event', 'Map', 'update', 'update draw query');
+			updateQueryResult(e);
+			
+			return;
+		});
 		
 		function updateQueryResult(e) {
 			var features = document.getElementById('features'),
 				closeButton = document.getElementById('features-close-button'),
 				featureCollection = draw.getAll(),
-				answer = document.getElementById('calculated-area');
+				answer = document.getElementById('calculated-area'),
+				hasLegalPolygon = false,
+				featureArray = featureCollection.features,
+				geometryCoordinates,
+				i,
+				j;
 			
-			if (featureCollection.features.length > 0) {
+			for(i = 0; i < featureArray.length; i++) {
+				geometryCoordinates = featureArray[i].geometry.coordinates;
+				for(j = 0; j < geometryCoordinates.length; j++){
+					if(geometryCoordinates[j].length > 2) {
+						hasLegalPolygon = true;
+						break;
+						break;
+					}
+				}
+			}
+			
+			if(hasLegalPolygon && featureCollection.features.length > 0) {
 				closeButton.onclick = function(){
 					closeButton.hidden = true;
 					tokenForSummary.cancel();

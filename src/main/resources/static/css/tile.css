@@ -1,3 +1,10 @@
+:root {
+    --dark-background: rgba(0, 0, 0, 0.75);
+    --light-background: whitesmoke;
+    --light-font: whitesmoke;
+    --warning-color: #f25934;
+}
+
 
 .mapboxgl-ctrl-group > button {
     width: 36px;
@@ -11,13 +18,14 @@
 }
 
 .mapboxgl-popup-content {
-    background-color: #000000c0;
+    background-color: var(--dark-background);
     color: inherit;
     border-radius: inherit;
     padding-top: 2px;
     padding-right: 0px;
     padding-left: 0px;
     padding-bottom: 1px;
+    width: 100%;
 }
 
 .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
@@ -26,19 +34,19 @@
 .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
-    border-top-color: #000000c0;
-    border-bottom-color: #000000c0;
+    border-top-color: var(--dark-background);
+    border-bottom-color: var(--dark-background);
 }
 
 .mapboxgl-popup-anchor-left .mapboxgl-popup-tip,
 .mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
-    border-left-color: #000000c0;
-    border-right-color: #000000c0;
+    border-left-color: var(--dark-background);
+    border-right-color: var(--dark-background);
 }
 
 .mapboxgl-popup-close-button,
 .mapboxgl-popup-close-button:hover {
-    background-color: #f25934;
+    background-color: var(--warning-color);
     color: inherit;
     width: 23px;
     height: 23px;
@@ -48,15 +56,15 @@ body {
     margin:0;
     padding:0;
     font-family: 'Open Sans', sans-serif;
-    color: whitesmoke;
-    background-color: #000000c0;
+    color: var(--light-font);
+    background-color: var(--dark-background);
     border-radius: 5px;
 }
 
 .active-tab-button {
     font-weight: bold;
     color: black;
-    background-color: whitesmoke;
+    background-color: var(--light-background);
 }
 
 .active-tab-button,
@@ -64,7 +72,7 @@ body {
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
     border-style: solid;
-    border-color: whitesmoke;
+    border-color: var(--light-font);
     display: inline-block;
     padding-left: 2px;
     padding-right: 2px;
@@ -101,7 +109,9 @@ body {
 
 .legend {
     border-radius: inherit;
-    padding: 0px;
+    padding-top: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
     transform: translate(0%, 0%);
 }
 
@@ -114,8 +124,12 @@ body {
     min-width: 20px;
 }
 
+.legend-title {
+    /**/
+}
+
 .zoom-note {
-    background-color: #f25934;
+    background-color: var(--warning-color);
     color: inherit;
     border-radius: 15px;
     position: absolute;
@@ -124,12 +138,12 @@ body {
 }
 
 .zoom-note-button-active {
-    background-color: whitesmoke;
+    background-color: var(--light-background);
 }
 
 .zoom-note-button-inactive {
-    border-color: #f25934;
-    color: #f25934;
+    border-color: var(--warning-color);
+    color: var(--warning-color);
     background-color: #ffffff;
 }
 
@@ -156,7 +170,7 @@ body {
 #features-close-button {
     border-radius: inherit;
     color: inherit;
-    background-color: #f25934;
+    background-color: var(--warning-color);
     border-style: solid;
     width: 36px;
     height: 36px;
@@ -223,19 +237,19 @@ body {
 }
 
 #menu a:hover {
-    background-color: #00000060;
-    color: whitesmoke;
+    background-color: rgba(0, 0, 0, 0.38);
+    color: var(--light-font);
 }
 
 #menu a.active:hover,
 #menu a.active {
-    background-color: #000000c0;
-    color: whitesmoke;
+    background-color: var(--dark-background);
+    color: var(--light-font);
 }
 
 #menu-button {
     border-radius: inherit;
-    background-color: whitesmoke;
+    background-color: var(--light-background);
     border-style: solid;
     width: 36px;
     height: 36px;
@@ -244,7 +258,7 @@ body {
 }
 
 #menu-panel {
-    background-color: whitesmoke;
+    background-color: var(--light-background);
     color: black;
     border-radius: inherit;
     display: inline-block;
