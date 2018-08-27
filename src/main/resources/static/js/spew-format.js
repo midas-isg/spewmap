@@ -10,6 +10,7 @@ var SPEW_FORMAT = {
 		"Relationships": "Relationship"
 	},
 	REMAPPED_LABELS: {
+		//Human Readable Singular Mappings
 		"age": {
 			"label": "Householder Age",
 			"use": "ages"
@@ -29,6 +30,83 @@ var SPEW_FORMAT = {
 		},
 		"serialno": {
 			"label": "Serial #"
+		},
+		
+		//SPEW Format Mappings
+		"AGE" : {
+			"label": "Age"
+		},
+		"AGEP" : {
+			"label": "Age"
+		},
+		"COUNTRY" : {
+			"label": "Country"
+		},
+		"ESR" : {
+			"label": "Employment"
+		},
+		"HINCP" : {
+			"label": "Income"
+		},
+		"HHTYPE": {
+			"label": "Household Type"
+		},
+		"INCTOT":{
+			"label": "Income"
+		},
+		"NP" : {
+			"label": "Size (Occupants)"
+		},
+		"PERNUM": {
+			"label": "Person ID"
+		},
+		"PERSONS": {
+			"label": "Size (Occupants)"
+		},
+		"place_id" : {
+			"label": "Place ID"
+		},
+		"puma_id": {
+			"label": "PUMA"
+		},
+		"RAC1P" : {
+			"label": "Race"
+		},
+		"RACE": {
+			"label": "Race"
+		},
+		"RELP" : {
+			"label": "Relationship"
+		},
+		"SCH" : {
+			"label": "School"
+		},
+		"SCHG" : {
+			"label": "Grade"
+		},
+		"SCHOOL" : {
+			"label": "School"
+		},
+		"school_id" : {
+			"label": "School ID"
+		},
+		"SERIALNO":{
+			"label": "Serial #"
+		},
+		"SEX" : {
+			"label": "Sex"
+		},
+		"SYNTHETIC_HID" : {
+			"label": "Household ID"
+		},
+		"SYNTHETIC_PID" : {
+			"label": "Person ID"
+		},
+		"workplace_id":{
+			"label": "Workplace ID"
+		},
+		"YEAR" : {
+			"label": "Year"
 		}
 	},
 	CODES: {
@@ -50,13 +128,7 @@ var SPEW_FORMAT = {
 		"relationships": "RELP"
 	},
 	SPEW_US_FORMAT: {
-		country: {
-			"840" : {
-				"original": "840",
-				"concise": "USA"
-			}
-		},
-		employments: {
+		ESR: {
 			"null": {
 				"original": "N/A (less than 16 years old)",
 				"concise": "N/A (less than 16 years old)"
@@ -86,7 +158,7 @@ var SPEW_FORMAT = {
 				"concise": "Not in labor force"
 			}
 		},
-		grades: {
+		SCHG: {
 			"null" : {
 				"original": "Not attending school",
 				"concise": "Not attending school"
@@ -161,7 +233,7 @@ var SPEW_FORMAT = {
 				"concise": "N/A" // original value not provided
 			}
 		},
-		races: {
+		RAC1P: {
 			"1": {
 				"original": "White alone",
 				"concise": "White"
@@ -199,7 +271,7 @@ var SPEW_FORMAT = {
 				"concise": "Multiracial"
 			}
 		},
-		relationships: {
+		RELP: {
 			"0": {
 				"original": "Reference person",
 				"concise": "Reference person"
@@ -273,7 +345,7 @@ var SPEW_FORMAT = {
 				"concise": "Noninstitutionalized group quarters population"
 			}
 		},
-		schools: {
+		SCH: {
 			"null": {
 				"original": "(less than 3 years old)",
 				"concise": "(less than 3 years old)"
@@ -290,8 +362,130 @@ var SPEW_FORMAT = {
 				"original": "Yes, private school or college or home school",
 				"concise": "Private school/college or home school"
 			}
+		}
+	},
+	SPEW_IPUMS_FORMAT: {
+		COUNTRY: {
+			"124" : {
+				"original": "124",
+				"concise": "CAN"
+			},
+			"840" : {
+				"original": "840",
+				"concise": "USA"
+			}
 		},
-		sexes: {
+		HHTYPE: {
+			null:{
+				"original": "No data reported",
+				"concise": "No data reported"
+			},
+			"00": {
+				"original": "Vacant household",
+				"concise": "Vacant household"
+			},
+			"01": {
+				"original": "One-person household",
+				"concise": "One-person household"
+			},
+			"02": {
+				"original": "Married/cohab couple, no children",
+				"concise": "Married/cohab couple without children"
+			},
+			"03": {
+				"original": "Married/cohab couple with children",
+				"concise": "Married/cohab couple with children"
+			},
+			"04": {
+				"original": "Single-parent family",
+				"concise": "Single-parent family"
+			},
+			"05": {
+				"original": "Polygamous family",
+				"concise": "Polygamous family"
+			},
+			"06": {
+				"original": "Extended family, relatives only",
+				"concise": "Extended family of relatives only"
+			},
+			"07": {
+				"original": "Composite household, family and non-relatives",
+				"concise": "Composite household of family and non-relatives"
+			},
+			"08": {
+				"original": "Non-family household",
+				"concise": "Non-family household"
+			},
+			"09": {
+				"original": "Unclassified subfamily",
+				"concise": "Unclassified subfamily"
+			},
+			"10": {
+				"original": "Other relative or non-relative household",
+				"concise": "Other relative or non-relative household"
+			},
+			"11": {
+				"original": "Group quarters",
+				"concise": "Group quarters"
+			},
+			"99": {
+				"original": "Unclassifiable",
+				"concise": "Unclassifiable"
+			}
+		},
+		RACE: {
+			"10": {
+				"original": "White",
+				"concise": "White"
+			},
+			"20": {
+				"original": "Black",
+				"concise": "Black"
+			},
+			"30": {
+				"original": "Indigenous",
+				"concise": "Indigenous"
+			},
+			"40": {
+				"original": "Asian",
+				"concise": "Asian"
+			},
+			"50": {
+				"original": "Mixed race",
+				"concise": "Mixed race"
+			},
+			"60": {
+				"original": "Other",
+				"concise": "Other"
+			}
+		},
+		SCHOOL: {
+			"0": {
+				"original": "NIU (not in universe)",
+				"concise": "NIU (not in universe)"
+			},
+			"1": {
+				"original": "Yes",
+				"concise": "Yes"
+			},
+			"2": {
+				"original": "No, not specified",
+				"concise": "No or unspecified"
+			},
+			"3": {
+				"original": "No, attended in past",
+				"concise": "Not currently attending"
+			},
+			"4": {
+				"original": "No, never attended",
+				"concise": "Never attended"
+			},
+			"9": {
+				"original": "Unknown/missing",
+				"concise": "Unknown/missing"
+			}
+		},
+		SEX: {
 			"1": {
 				"original": "Male",
 				"concise": "Male"
@@ -299,6 +493,10 @@ var SPEW_FORMAT = {
 			"2": {
 				"original": "Female",
 				"concise": "Female"
+			},
+			"9": {
+				"original": "Unknown",
+				"concise": "Unknown"
 			}
 		}
 	}

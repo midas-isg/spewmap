@@ -1,9 +1,9 @@
 "use strict";
 
+//please see tile.js for latest version
+
 (function(SPEW_FORMAT) {
 	var CONTEXT = '/spewmap/households/api',
-		//TILEHOST = 'https://spew.olympus.psc.edu/spewtiles/',
-		TILEHOST = 'http://localhost:9003/',
 		theZoom = 14,
 		tokenForSummary = {cancel: function(){}},
 		qs = queryString(),
@@ -12,8 +12,7 @@
 		zoomNoteButton = document.getElementById('zoom-note-button'),
 		REMAPPED_LABELS = SPEW_FORMAT.REMAPPED_LABELS,
 		SINGULAR_MAPPINGS = SPEW_FORMAT.SINGULAR_MAPPINGS,
-		SPEW_US_FORMAT = SPEW_FORMAT.SPEW_US_FORMAT,
-		SPEW_IPUMS_FORMAT = SPEW_FORMAT.SPEW_IPUMS_FORMAT;
+		SPEW_US_FORMAT = SPEW_FORMAT.SPEW_US_FORMAT;
 	
 	mapboxgl.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
 	map = new mapboxgl.Map({
@@ -77,25 +76,17 @@
 	showMenu();
 	
 	function onLoad() {
-		//var srcId = 'usa'; // usa with array & races-> race & ages ->age
-		var srcID = [
-				'usa',
-				'can'
-			],
-			i;
-		
+		// var srcId = 'hh'; // usa with array & races-> races & ages ->age
+		var srcId = 'usa'; // usa with array & races-> race & ages ->age
 		map.on('zoomend', onZoomend);
 		onZoomend();
 		
 		addControls();
+		addSource(srcId);
+		addCircleLayers(srcId);
+		addTheLabelLayer(srcId);
 		
-		for(i = 0; i < srcID.length; i++) {
-			addSource(srcID[i]);
-			addCircleLayers(srcID[i]);
-			addTheLabelLayer(srcID[i]);
-		}
-		
-		function onZoomend() {
+		function onZoomend(){
 			var zoom = map.getZoom(),
 				zoomLabel = document.getElementById('zoom-level'),
 				zoomNote = document.getElementById('zoom-note');
@@ -111,27 +102,26 @@
 			
 			return;
 		}
-		
 		map.on('DISABLE-mouseup', function (e) { // Get features under the mouse pointer
 			var features = map.queryRenderedFeatures(e.point);
 			document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
 		});
 	}
 	
-	function addSource(srcID) {
-		map.addSource(srcID, { // Add a third party vector tile source https://www.mapbox.com/mapbox-gl-js/example/third-party/
+	function addSource(srcId) {
+		map.addSource(srcId, { // Add a third party vector tile source https://www.mapbox.com/mapbox-gl-js/example/third-party/
 			'type': 'vector',
-			'tiles': [TILEHOST + srcID + '/{z}/{x}/{y}.pbf'],
+			'tiles': ['https://spew.olympus.psc.edu/spewtiles/' + srcId + '/{z}/{x}/{y}.pbf'],
 			'minzoom': 0,
 			'maxzoom': theZoom
 		});
 	}
 	
-	function addTheLabelLayer(srcID) {
+	function addTheLabelLayer(srcId) {
 		map.addLayer({
-			id: 'label-' + srcID,
+			id: 'label',
 			type: 'symbol',
-			source: srcID,
+			source: srcId,
 			'source-layer': 'hh',
 			minzoom: 19, //19
 			layout: {
@@ -142,30 +132,30 @@
 		});
 	}
 	
-	function addCircleLayers(srcID) {
+	function addCircleLayers(srcId) {
 		var popup,
-			ageID = 'Householder Age -' + srcID,
-			raceID = 'Householder Race -' + srcID,
-			hhPersonsID = 'Size (Occupants) -' + srcID,
-			hhIncomeID = 'Income -' + srcID,
-			hhID = 'Household -' + srcID,
+			ageId = 'Householder Age',
+			raceId = 'Householder Race',
+			hhPersonsId = 'Size (Occupants)',
+			hhIncomeId = 'Income',
+			hhId = 'Household',
 			toggleableLayerIds = [
-				ageID,
-				raceID,
-				hhPersonsID,
-				hhIncomeID,
-				hhID
+				ageId,
+				raceId,
+				hhPersonsId,
+				hhIncomeId,
+				hhId
 			];
 		
-		addAgeTileLayer(ageID, srcID);
-		addRaceTileLayer(raceID, srcID);
-		addIncomeTileLayer(hhIncomeID, srcID);
-		addPersonsTileLayer(hhPersonsID, srcID);
-		addHouseholdTileLayer(hhID, srcID);
+		addAgeTileLayer(ageId, srcId);
+		addRaceTileLayer(raceId, srcId);
+		addPersonsTileLayer(hhPersonsId, srcId);
+		addIncomeTileLayer(hhIncomeId, srcId);
+		addHouseholdTileLayer(hhId, srcId);
 		
-		makeCircleLayersToggleable(hhID);
+		makeCircleLayersToggleable();
 		
-		function addAgeTileLayer(ageID, srcID) {
+		function addAgeTileLayer() {
 			var circleColor = [
 				'step',
 				['get', 'age'],
@@ -175,10 +165,10 @@
 				'rgb(255, 0, 0)', 64,
 				'rgb(255, 0, 255)'
 			];
-			addTileLayer(ageID, srcID, circleColor);
+			addTileLayer(ageId, srcId, circleColor);
 		}
 		
-		function addRaceTileLayer(raceID, srcID) {
+		function addRaceTileLayer() {
 			var circleColor = [
 					'match',
 					['get', 'race'],
@@ -208,10 +198,10 @@
 					'endMapping': "Other"
 				};
 			
-			addTileLayer(raceID, srcID, circleColor, raceCategories);
+			addTileLayer(raceId, srcId, circleColor, raceCategories);
 		}
 		
-		function addIncomeTileLayer(id, srcID) {
+		function addIncomeTileLayer(id, srcId) {
 			var circleColor = [
 					'step',
 					['get', 'income'],
@@ -231,10 +221,10 @@
 					},
 					'endMapping': '&ge; 250'
 				};
-			addTileLayer(id, srcID, circleColor, incomeCategories);
+			addTileLayer(id, srcId, circleColor, incomeCategories);
 		}
 		
-		function addPersonsTileLayer(id, srcID) {
+		function addPersonsTileLayer(id, srcId) {
 			var circleColor = [
 					'match',
 					['get', 'persons'],
@@ -248,11 +238,11 @@
 					'endMapping': "&ge; 5"
 				};
 			
-			addTileLayer(id, srcID, circleColor, sizeCategories);
+			addTileLayer(id, srcId, circleColor, sizeCategories);
 		}
 		
-		function addHouseholdTileLayer(id, srcID) {
-			addTileLayer(id, srcID, 'orange');
+		function addHouseholdTileLayer(id, srcId) {
+			addTileLayer(id, srcId, 'orange');
 		}
 		
 		function addLegend(legendID, circleColor, categoryValues) {
@@ -401,11 +391,11 @@
 			return;
 		}
 		
-		function addTileLayer(layerID, srcID, circleColor, categoryValues) {
+		function addTileLayer(id, srcId, circleColor, categoryValues) {
 			map.addLayer({
-				'id': layerID,
+				'id': id,
 				'type': 'circle',
-				'source': srcID,
+				'source': srcId,
 				'source-layer': 'hh',
 				paint: {
 					'circle-radius': {
@@ -415,9 +405,9 @@
 					'circle-color': circleColor
 				}
 			}, 'waterway-label');
-			makeLayerClickable(layerID, srcID);
+			makeLayerClickable(id, srcId);
 			
-			addLegend(layerID, circleColor, categoryValues);
+			addLegend(id, circleColor, categoryValues);
 		}
 		
 		function makeLayerClickable(id, srcId) {
@@ -449,9 +439,9 @@
 				}
 				
 				popup = new mapboxgl.Popup()
-					.setLngLat(coordinates)
-					.setDOMContent(popupContent)
-					.addTo(map);
+				.setLngLat(coordinates)
+				.setDOMContent(popupContent)
+				.addTo(map);
 				
 				for(i = 0; i < tabs.length; i++) {
 					tabButton = document.getElementById(tabs[i] + '-button');
@@ -500,14 +490,12 @@
 					k,
 					values,
 					householdSize,
-					householdCategories = {},
 					i,
 					label,
 					category,
 					raw = {},
 					readable = {},
-					code,
-					currentFormat;
+					code;
 				
 				html += '<div id="human-readable-button" class="active-tab-button">Household</div>';
 				html += '<div id="individuals-button" class="tab-button">Individual</div>';
@@ -520,19 +508,11 @@
 					if (obj.hasOwnProperty(k)) {
 						values = obj[k].toString();
 						
-						if((values.charAt(0) === '{') || (values.charAt(0) === '[')) {
+						if(values.charAt(0) === '[') {
 							values = values.substring(1, obj[k].length - 1).split(',');
 						}
-						else if(values.length > 0) {
-							values = [values];
-							householdCategories[k] = true;
-							
-							if(REMAPPED_LABELS[k]){
-								householdCategories[REMAPPED_LABELS[k]['label']] = true;
-							}
-						}
 						else {
-							values = [null];
+							values = [values];
 						}
 						
 						category = k;
@@ -554,14 +534,6 @@
 						else {
 							code = k;
 						}
-						//code = SPEW_FORMAT.CODES[category] || k;
-						
-						if(SPEW_IPUMS_FORMAT[category]) {
-							currentFormat = SPEW_IPUMS_FORMAT;
-						}
-						else {
-							currentFormat = SPEW_US_FORMAT;
-						}
 						
 						label = label.charAt(0).toUpperCase() + label.substring(1);
 						
@@ -569,8 +541,8 @@
 						raw[code] = [];
 						readable[label] = [];
 						for(i = 0; i < values.length; i++) {
-							if(currentFormat[category] && currentFormat[category][values[i]]['concise']){
-								readable[label].push(currentFormat[category][values[i]]['concise']);
+							if(SPEW_US_FORMAT[category] && SPEW_US_FORMAT[category][values[i]]['concise']){
+								readable[label].push(SPEW_US_FORMAT[category][values[i]]['concise']);
 							}
 							else {
 								readable[label].push(values[i]);
@@ -590,13 +562,13 @@
 						html += '<span>';
 						html += '<b>' + label + '</b></span>: ';
 						
-						if(currentFormat[category]) {
+						if(SPEW_US_FORMAT[category]) {
 							if(values.length > 1) {
 								html += '[';
 							}
 							
-							if(currentFormat[category][values[0]]['original']){
-								html += '<span title="' + currentFormat[category][values[0]]['original'] + '">';
+							if(SPEW_US_FORMAT[category][values[0]]['original']){
+								html += '<span title="' + SPEW_US_FORMAT[category][values[0]]['original'] + '">';
 							}
 							else {
 								html += '<span>';
@@ -607,8 +579,8 @@
 							for(i = 1; i < values.length; i++) {
 								html += ', ';
 								
-								if(currentFormat[category][values[i]]['original']){
-									html += '<span title="' + currentFormat[category][values[i]]['original'] + '">';
+								if(SPEW_US_FORMAT[category][values[i]]['original']){
+									html += '<span title="' + SPEW_US_FORMAT[category][values[i]]['original'] + '">';
 								}
 								else {
 									html += '<span>';
@@ -656,14 +628,14 @@
 				
 				//make the individuals tab
 				html += '</div><div id="individuals-tab" hidden>[';
-				householdSize = parseInt(raw['PERSONS']) || parseInt(raw['NP']);
+				householdSize = parseInt(raw['NP']);
 				
 				for(i = 0; i < householdSize; i++) {
 					html += '<div>&emsp;{</div>';
 					
 					for(k in readable) {
-						if(readable.hasOwnProperty(k) && (!householdCategories[k])) {
-							html += '<div>&emsp;&emsp;<strong>' + k +
+						if(readable.hasOwnProperty(k) && SINGULAR_MAPPINGS[k]) {
+							html += '<div>&emsp;&emsp;<strong>' + SINGULAR_MAPPINGS[k] +
 								'</strong>: ' + readable[k][i] + '</div>';
 						}
 					}
@@ -677,7 +649,7 @@
 			}
 		}
 		
-		function makeCircleLayersToggleable(hhID) {
+		function makeCircleLayersToggleable() {
 			var id2link = {},
 				layerId,
 				layers,
@@ -692,7 +664,7 @@
 				link.textContent = layerId;
 				id2link[layerId] = link;
 				
-				if (layerId !== hhID)
+				if (layerId !== hhId)
 					hide.call(link, layerId);
 				else
 					show.call(link, layerId);

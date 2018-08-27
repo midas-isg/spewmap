@@ -16,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -28,9 +27,7 @@ import static edu.pitt.isg.spewmap.Strings.urlHouseHold;
 import static edu.pitt.isg.spewmap.Strings.urlHouseHoldsByBox;
 import static edu.pitt.isg.spewmap.geom.GeometryAid.GEOJSON;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.http.HttpHeaders.ACCEPT;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
