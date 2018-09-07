@@ -46,7 +46,7 @@ var SPEW_FORMAT = {
 			"label": "Employment"
 		},
 		"HINCP" : {
-			"label": "Income"
+			"label": "Household Income"
 		},
 		"HHTYPE": {
 			"label": "Household Type"
@@ -370,6 +370,10 @@ var SPEW_FORMAT = {
 				"original": "124",
 				"concise": "CAN"
 			},
+			"242" : {
+				"original": "242",
+				"concise": "FIJI"
+			},
 			"840" : {
 				"original": "840",
 				"concise": "USA"
@@ -380,43 +384,43 @@ var SPEW_FORMAT = {
 				"original": "No data reported",
 				"concise": "No data reported"
 			},
-			"00": {
+			"0": {
 				"original": "Vacant household",
 				"concise": "Vacant household"
 			},
-			"01": {
+			"1": {
 				"original": "One-person household",
 				"concise": "One-person household"
 			},
-			"02": {
+			"2": {
 				"original": "Married/cohab couple, no children",
 				"concise": "Married/cohab couple without children"
 			},
-			"03": {
+			"3": {
 				"original": "Married/cohab couple with children",
 				"concise": "Married/cohab couple with children"
 			},
-			"04": {
+			"4": {
 				"original": "Single-parent family",
 				"concise": "Single-parent family"
 			},
-			"05": {
+			"5": {
 				"original": "Polygamous family",
 				"concise": "Polygamous family"
 			},
-			"06": {
+			"6": {
 				"original": "Extended family, relatives only",
 				"concise": "Extended family of relatives only"
 			},
-			"07": {
+			"7": {
 				"original": "Composite household, family and non-relatives",
 				"concise": "Composite household of family and non-relatives"
 			},
-			"08": {
+			"8": {
 				"original": "Non-family household",
 				"concise": "Non-family household"
 			},
-			"09": {
+			"9": {
 				"original": "Unclassified subfamily",
 				"concise": "Unclassified subfamily"
 			},
@@ -434,6 +438,10 @@ var SPEW_FORMAT = {
 			}
 		},
 		RACE: {
+			null: {
+				"original": "No data reported",
+				"concise": "No data reported"
+			},
 			"10": {
 				"original": "White",
 				"concise": "White"

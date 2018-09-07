@@ -11,7 +11,7 @@
 		menuButton = document.getElementById('menu-button'),
 		zoomNoteButton = document.getElementById('zoom-note-button'),
 		REMAPPED_LABELS = SPEW_FORMAT.REMAPPED_LABELS,
-		SINGULAR_MAPPINGS = SPEW_FORMAT.SINGULAR_MAPPINGS,
+		//SINGULAR_MAPPINGS = SPEW_FORMAT.SINGULAR_MAPPINGS,
 		SPEW_US_FORMAT = SPEW_FORMAT.SPEW_US_FORMAT,
 		SPEW_IPUMS_FORMAT = SPEW_FORMAT.SPEW_IPUMS_FORMAT;
 	
@@ -80,7 +80,8 @@
 		//var srcId = 'usa'; // usa with array & races-> race & ages ->age
 		var srcID = [
 				'usa',
-				'can'
+				'can',
+				'fiji'
 			],
 			i;
 		
@@ -144,16 +145,16 @@
 	
 	function addCircleLayers(srcID) {
 		var popup,
-			ageID = 'Householder Age -' + srcID,
-			raceID = 'Householder Race -' + srcID,
-			hhPersonsID = 'Size (Occupants) -' + srcID,
-			hhIncomeID = 'Income -' + srcID,
+			ageID = 'Householder Age',
+			raceID = 'Householder Race',
+			hhPersonsID = 'Size (Occupants)',
+			hhIncomeID = 'Income',
 			hhID = 'Household -' + srcID,
 			toggleableLayerIds = [
-				ageID,
-				raceID,
-				hhPersonsID,
-				hhIncomeID,
+				ageID + ' -' + srcID,
+				raceID + ' -' + srcID,
+				hhPersonsID + ' -' + srcID,
+				hhIncomeID + ' -' + srcID,
 				hhID
 			];
 		
@@ -168,53 +169,60 @@
 		function addAgeTileLayer(ageID, srcID) {
 			var circleColor = [
 				'step',
-				['get', 'age'],
+				['get', 'HH_AGE'],
 				'rgb(0, 0, 255)', 34,
 				'rgb(51, 194, 255)', 44,
 				'rgb(230, 152, 0)', 54,
 				'rgb(255, 0, 0)', 64,
 				'rgb(255, 0, 255)'
 			];
-			addTileLayer(ageID, srcID, circleColor);
+			addTileLayer(ageID + ' -' + srcID, srcID, circleColor);
 		}
 		
 		function addRaceTileLayer(raceID, srcID) {
 			var circleColor = [
 					'match',
-					['get', 'race'],
-					1, 'rgb(212, 44, 44)', //1 .White alone
-					2, 'rgb(0, 169, 157)', // 2 .Black or African American alone
-					// 3 .American Indian alone
-					//4, 'rgb(255, 255, 0)',// 4 .Alaska Native alone
-					// 5 .American Indian and Alaska Native tribes specified; or American .Indian or Alaska Native, not specified and no other races
-					6, 'rgb(153, 102, 255)',  // 6 .Asian alone
-					// 7 .Native Hawaiian and Other Pacific Islander alone
-					// 8 .Some Other Race alone
-					9, '#ffa500', // 9 .Two or More Races
+					['get', 'HH_RACE'],
+					10, 'rgb(212, 44, 44)', //1 .White alone
+					20, 'rgb(0, 169, 157)', // 2 .Black or African American alone
+					// 30 .American Indian alone
+					//??, 'rgb(255, 255, 0)',// 4 .Alaska Native alone
+					// 31 .American Indian and Alaska Native tribes specified; or American .Indian or Alaska Native, not specified and no other races
+					40, 'rgb(153, 102, 255)',  // 6 .Asian alone
+					// 70 .Native Hawaiian and Other Pacific Islander alone
+					// 80 .Some Other Race alone
+					55, '#ffa500', // 9 .Two or More Races
 					'rgb(170, 147, 61)' // Other
 				],
 				raceCategories = {
 					'mapping': {
-						1 : "White",
-						2 : "Black",
+						//1 : "White",
+						//2 : "Black",
 						//3 : "American Indian",
 						//4 : "Alaskan",
 						//5 : "American Indian/Alaskan tribe specified or unspecified",
-						6 : "Asian",
+						//6 : "Asian",
 						//7 : "Native Hawaiian and Other Pacific Islander",
 						//8 : "Other",
-						9: "Multiracial"
+						//9: "Multiracial"
+						10: "White",
+						20: "Black",
+						30: "Indigenous",
+						31: "American Indian",
+						40: "Asian",
+						55: "Multiracial",
+						60: "Other"
 					},
 					'endMapping': "Other"
 				};
 			
-			addTileLayer(raceID, srcID, circleColor, raceCategories);
+			addTileLayer(raceID + ' -' + srcID, srcID, circleColor, raceCategories);
 		}
 		
-		function addIncomeTileLayer(id, srcID) {
+		function addIncomeTileLayer(hhIncomeID, srcID) {
 			var circleColor = [
 					'step',
-					['get', 'income'],
+					['get', 'HINCP'],
 					'rgb(229, 159, 0)', 25000,
 					'rgb(168, 116, 0)', 75000,
 					'rgb(63, 115, 127)', 125000,
@@ -231,13 +239,14 @@
 					},
 					'endMapping': '&ge; 250'
 				};
-			addTileLayer(id, srcID, circleColor, incomeCategories);
+			addTileLayer(hhIncomeID + ' -' + srcID, srcID, circleColor, incomeCategories);
 		}
 		
-		function addPersonsTileLayer(id, srcID) {
+		function addPersonsTileLayer(personsID, srcID) {
 			var circleColor = [
 					'match',
-					['get', 'persons'],
+					['get', 'PERSONS'],
+					//['get', 'NP'],
 					1, rgb(67, 2, 252),
 					2, rgb(7, 221, 249),
 					3, rgb(242, 201, 15),
@@ -248,7 +257,7 @@
 					'endMapping': "&ge; 5"
 				};
 			
-			addTileLayer(id, srcID, circleColor, sizeCategories);
+			addTileLayer(personsID + ' -' + srcID, srcID, circleColor, sizeCategories);
 		}
 		
 		function addHouseholdTileLayer(id, srcID) {
@@ -256,7 +265,7 @@
 		}
 		
 		function addLegend(legendID, circleColor, categoryValues) {
-			var menuPanel = document.getElementById('legend-panel'),
+			var legendPanel = document.getElementById('legend-panel'),
 				legendItem = document.createElement('div'),
 				legendTitle = document.createElement('caption'),
 				legendItemTable = document.createElement('table'),
@@ -396,7 +405,7 @@
 			
 			legendItemTable.appendChild(tableBody);
 			legendItem.appendChild(legendItemTable);
-			menuPanel.appendChild(legendItem);
+			legendPanel.appendChild(legendItem);
 			
 			return;
 		}
@@ -517,7 +526,7 @@
 				html += '<div id="human-readable-tab">';
 				
 				for (k in obj) {
-					if (obj.hasOwnProperty(k)) {
+					if (obj.hasOwnProperty(k) && (k.substring(0, 3) !== "HH_")) {
 						values = obj[k].toString();
 						
 						if((values.charAt(0) === '{') || (values.charAt(0) === '[')) {
@@ -585,47 +594,49 @@
 						}
 						
 						//Make the human-readable tab rows
-						html += '<div>';
-						//html += '<span title="' + code + '">';
-						html += '<span>';
-						html += '<b>' + label + '</b></span>: ';
-						
-						if(currentFormat[category]) {
-							if(values.length > 1) {
-								html += '[';
-							}
+						if(code !== "NP") {
+							html += '<div>';
+							//html += '<span title="' + code + '">';
+							html += '<span>';
+							html += '<b>' + label + '</b></span>: ';
 							
-							if(currentFormat[category][values[0]]['original']){
-								html += '<span title="' + currentFormat[category][values[0]]['original'] + '">';
-							}
-							else {
-								html += '<span>';
-							}
-							
-							html += readable[label][0] + '</span>';
-							
-							for(i = 1; i < values.length; i++) {
-								html += ', ';
+							if(currentFormat[category]) {
+								if(values.length > 1) {
+									html += '[';
+								}
 								
-								if(currentFormat[category][values[i]]['original']){
-									html += '<span title="' + currentFormat[category][values[i]]['original'] + '">';
+								if(currentFormat[category][values[0]]['original']) {
+									html += '<span title="' + currentFormat[category][values[0]]['original'] + '">';
 								}
 								else {
 									html += '<span>';
 								}
 								
-								html += readable[label][i] + '</span>';
+								html += readable[label][0] + '</span>';
+								
+								for(i = 1; i < values.length; i++) {
+									html += ', ';
+									
+									if(currentFormat[category][values[i]]['original']){
+										html += '<span title="' + currentFormat[category][values[i]]['original'] + '">';
+									}
+									else {
+										html += '<span>';
+									}
+									
+									html += readable[label][i] + '</span>';
+								}
+								
+								if(values.length > 1) {
+									html += ']';
+								}
+							}
+							else {
+								html += obj[k];
 							}
 							
-							if(values.length > 1) {
-								html += ']';
-							}
+							html += '</div>';
 						}
-						else {
-							html += obj[k];
-						}
-						
-						html += '</div>';
 					}
 				}
 				
