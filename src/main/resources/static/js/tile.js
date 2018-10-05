@@ -79,9 +79,11 @@
 	function onLoad() {
 		//var srcId = 'usa'; // usa with array & races-> race & ages ->age
 		var srcID = [
-				'usa',
+				'aut',
+				'blr',
 				'can',
-				'fiji'
+				'fji',
+				'usa'
 			],
 			i;
 		
@@ -149,12 +151,12 @@
 			raceID = 'Householder Race',
 			hhPersonsID = 'Size (Occupants)',
 			hhIncomeID = 'Income',
-			hhID = 'Household -' + srcID,
+			hhID = 'Household',
 			toggleableLayerIds = [
-				ageID + ' -' + srcID,
-				raceID + ' -' + srcID,
-				hhPersonsID + ' -' + srcID,
-				hhIncomeID + ' -' + srcID,
+				ageID,
+				raceID,
+				hhPersonsID,
+				hhIncomeID /*+ ' -' + srcID*/,
 				hhID
 			];
 		
@@ -164,7 +166,7 @@
 		addPersonsTileLayer(hhPersonsID, srcID);
 		addHouseholdTileLayer(hhID, srcID);
 		
-		makeCircleLayersToggleable(hhID);
+		makeCircleLayersToggleable(hhID, srcID);
 		
 		function addAgeTileLayer(ageID, srcID) {
 			var circleColor = [
@@ -176,7 +178,7 @@
 				'rgb(255, 0, 0)', 64,
 				'rgb(255, 0, 255)'
 			];
-			addTileLayer(ageID + ' -' + srcID, srcID, circleColor);
+			addTileLayer(ageID, srcID, circleColor);
 		}
 		
 		function addRaceTileLayer(raceID, srcID) {
@@ -216,7 +218,7 @@
 					'endMapping': "Other"
 				};
 			
-			addTileLayer(raceID + ' -' + srcID, srcID, circleColor, raceCategories);
+			addTileLayer(raceID, srcID, circleColor, raceCategories);
 		}
 		
 		function addIncomeTileLayer(hhIncomeID, srcID) {
@@ -239,7 +241,7 @@
 					},
 					'endMapping': '&ge; 250'
 				};
-			addTileLayer(hhIncomeID + ' -' + srcID, srcID, circleColor, incomeCategories);
+			addTileLayer(hhIncomeID, srcID, circleColor, incomeCategories);
 		}
 		
 		function addPersonsTileLayer(personsID, srcID) {
@@ -257,14 +259,14 @@
 					'endMapping': "&ge; 5"
 				};
 			
-			addTileLayer(personsID + ' -' + srcID, srcID, circleColor, sizeCategories);
+			addTileLayer(personsID, srcID, circleColor, sizeCategories);
 		}
 		
 		function addHouseholdTileLayer(id, srcID) {
 			addTileLayer(id, srcID, 'orange');
 		}
 		
-		function addLegend(legendID, circleColor, categoryValues) {
+		function addLegend(category, circleColor, categoryValues) {
 			var legendPanel = document.getElementById('legend-panel'),
 				legendItem = document.createElement('div'),
 				legendTitle = document.createElement('caption'),
@@ -275,7 +277,8 @@
 				contentRow = document.createElement('tr'),
 				content,
 				bubbleCell,
-				categoryLegend = legendID,
+				legendID = category + '-legend',
+				categoryLegend = category,
 				categoryMapping,
 				categoryEndMapping,
 				i;
@@ -411,8 +414,10 @@
 		}
 		
 		function addTileLayer(layerID, srcID, circleColor, categoryValues) {
+			var layerSourceID = layerID + ' -' + srcID;
+			
 			map.addLayer({
-				'id': layerID,
+				'id': layerSourceID,
 				'type': 'circle',
 				'source': srcID,
 				'source-layer': 'hh',
@@ -424,7 +429,7 @@
 					'circle-color': circleColor
 				}
 			}, 'waterway-label');
-			makeLayerClickable(layerID, srcID);
+			makeLayerClickable(layerSourceID, srcID);
 			
 			addLegend(layerID, circleColor, categoryValues);
 		}
@@ -532,18 +537,20 @@
 						if((values.charAt(0) === '{') || (values.charAt(0) === '[')) {
 							values = values.substring(1, obj[k].length - 1).split(',');
 						}
-						else if(values.length > 0) {
-							values = [values];
+						else {
 							householdCategories[k] = true;
 							
 							if(REMAPPED_LABELS[k]){
 								householdCategories[REMAPPED_LABELS[k]['label']] = true;
 							}
+							
+							if(values.length > 0) {
+								values = [values];
+							}
+							else {
+								values = [null];
+							}
 						}
-						else {
-							values = [null];
-						}
-						
 						category = k;
 						
 						if(REMAPPED_LABELS[k]) {
@@ -688,61 +695,77 @@
 			}
 		}
 		
-		function makeCircleLayersToggleable(hhID) {
+		function makeCircleLayersToggleable(hhID, srcID) {
 			var id2link = {},
-				layerId,
+				layerID,
 				layers,
 				link,
 				i;
 			
 			for (i = 0; i < toggleableLayerIds.length; i++) {
-				layerId = toggleableLayerIds[i];
+				layerID = toggleableLayerIds[i] + ' -' + srcID;
+				link = document.getElementById(toggleableLayerIds[i]);
 				
-				link = document.createElement('a');
-				link.href = '#';
-				link.textContent = layerId;
-				id2link[layerId] = link;
-				
-				if (layerId !== hhID)
-					hide.call(link, layerId);
-				else
-					show.call(link, layerId);
-				
-				link.onclick = function (e) {
-					var clickedLayer = this.textContent,
-						visibility = map.getLayoutProperty(clickedLayer, 'visibility'),
-						layer,
-						i;
+				if(!link){
+					link = document.createElement('a');
+					link.id = toggleableLayerIds[i];
+					link.href = '#';
+					link.textContent = toggleableLayerIds[i];
 					
-					e.preventDefault();
-					e.stopPropagation();
-					
-					if (visibility === 'visible') {
-						hide.call(this, clickedLayer);
-					}
-					else {
-						for (i = 0; i < toggleableLayerIds.length; i++) {
-							layer = toggleableLayerIds[i];
-							hide.call(id2link[layer], layer);
+					layers = document.getElementById('menu');
+					layers.appendChild(link);
+				}
+				
+				id2link[layerID] = link;
+				
+				if (toggleableLayerIds[i] !== hhID){
+					hideLayer.call(link, layerID, toggleableLayerIds[i]);
+				}
+				else {
+					showLayer.call(link, layerID, toggleableLayerIds[i]);
+				}
+				
+				(function(clickedLayerID, category) {
+					link.addEventListener("click", function (e) {
+						var visibility = map.getLayoutProperty(clickedLayerID, 'visibility'),
+							otherLayerID,
+							i;
+						
+						//to my knowledge we can probably delete these two lines,
+						//but more testing is needed to see if removing causes side effects
+						//e.preventDefault();
+						//e.stopPropagation();
+						
+						if (visibility === 'visible') {
+							hideLayer.call(this, clickedLayerID, category);
 						}
-						show.call(this, clickedLayer);
-					}
-				};
-				
-				layers = document.getElementById('menu');
-				layers.appendChild(link);
+						else {
+							for (i = 0; i < toggleableLayerIds.length; i++) {
+								otherLayerID = toggleableLayerIds[i] + ' -' + srcID;
+								
+								if(otherLayerID !== clickedLayerID) {
+									hideLayer.call(id2link[otherLayerID], otherLayerID, toggleableLayerIds[i]);
+								}
+								else {
+									showLayer.call(this, clickedLayerID, toggleableLayerIds[i]);
+								}
+							}
+						}
+					});
+				})(layerID, toggleableLayerIds[i]);
 			}
 			
-			function show(id) {
+			//TODO: refactor showLayer() and hideLayer()
+			function showLayer(layerID, layerCategory) {
 				this.className = 'active';
-				map.setLayoutProperty(id, 'visibility', 'visible');
-				document.getElementById(id).style.display = 'block';
+				map.setLayoutProperty(layerID, 'visibility', 'visible');
+				document.getElementById(layerCategory + '-legend').style.display = 'block';
 			}
 			
-			function hide(id) {
-				this.className = '';
-				map.setLayoutProperty(id, 'visibility', 'none');
-				document.getElementById(id).style.display = 'none';
+			function hideLayer(layerID, layerCategory) {
+				this.className = null;
+				map.setLayoutProperty(layerID, 'visibility', 'none');
+				document.getElementById(layerCategory + '-legend').style.display = 'none';
 			}
 		}
 		

@@ -366,13 +366,21 @@ var SPEW_FORMAT = {
 	},
 	SPEW_IPUMS_FORMAT: {
 		COUNTRY: {
+			"40" : {
+				"original": "040",
+				"concise": "Austria"
+			},
+			"112" : {
+				"original": "112",
+				"concise": "Belarus"
+			},
 			"124" : {
 				"original": "124",
-				"concise": "CAN"
+				"concise": "Canada"
 			},
 			"242" : {
 				"original": "242",
-				"concise": "FIJI"
+				"concise": "Fiji"
 			},
 			"840" : {
 				"original": "840",
