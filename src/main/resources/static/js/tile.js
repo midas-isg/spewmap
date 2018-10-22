@@ -585,8 +585,8 @@
 						raw[code] = [];
 						readable[label] = [];
 						for(i = 0; i < values.length; i++) {
-							if(currentFormat[category] && currentFormat[category][values[i]]['name']){
-								readable[label].push(currentFormat[category][values[i]]['name']);
+							if(currentFormat[category] && currentFormat[category][values[i]]['concise']){
+								readable[label].push(currentFormat[category][values[i]]['concise']);
 							}
 							else {
 								readable[label].push(values[i]);
