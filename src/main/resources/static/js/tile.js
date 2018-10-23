@@ -521,7 +521,8 @@
 					raw = {},
 					readable = {},
 					code,
-					currentFormat;
+					currentFormat,
+					temp;
 				
 				html += '<div id="human-readable-button" class="active-tab-button">Household</div>';
 				html += '<div id="individuals-button" class="tab-button">Individual</div>';
@@ -593,7 +594,13 @@
 							}
 							
 							if(values[i] !== "null"){
-								raw[code].push(parseInt(values[i]));
+								temp = parseInt(values[i]);
+								if(!Number.isNaN(temp)) {
+									raw[code].push(temp);
+								}
+								else {
+									raw[code].push(values[i]);
+								}
 							}
 							else {
 								raw[code].push(null);
@@ -657,15 +664,19 @@
 						
 						if(raw[k].length > 1) {
 							html += '[';
-						}
-						
-						html += raw[k][0];
-						for(i = 1; i < raw[k].length; i++) {
-							html += ', ' + raw[k][i];
-						}
-						
-						if(raw[k].length > 1) {
+							
+							html += raw[k][0];
+							for(i = 1; i < raw[k].length; i++) {
+								html += ', ' + raw[k][i];
+							}
+							
 							html += ']';
+						}
+						else {
+							html += raw[k][0];
+							for(i = 1; i < raw[k].length; i++) {
+								html += ', ' + raw[k][i];
+							}
 						}
 						
 						html += '</span></div>';
