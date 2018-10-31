@@ -1,27 +1,12 @@
 package edu.pitt.isg.spewmap;
 
-import edu.pitt.isg.spewmap.spe.Household;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.List;
-
-import static edu.pitt.isg.spewmap.Strings.urlHouseHold;
-import static edu.pitt.isg.spewmap.Strings.urlHouseHoldsByBox;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
-import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpStatus.OK;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -29,7 +14,7 @@ public class SpewmapApplicationTests {
 	@Autowired
 	private TestRestTemplate restTemplate;
 
-	@Test
+	/*@Test
 	void validHousehold() {
 		final String id = "4353629L";
 		final String validHouseHoldUrl = urlHouseHold(id);
@@ -80,5 +65,5 @@ public class SpewmapApplicationTests {
 		final HttpHeaders headers = new HttpHeaders();
 		headers.setAccept(singletonList(MediaType.APPLICATION_JSON));
 		return headers;
-	}
+	}*/
 }

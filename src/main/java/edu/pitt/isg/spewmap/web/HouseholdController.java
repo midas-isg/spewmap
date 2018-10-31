@@ -1,48 +1,20 @@
 package edu.pitt.isg.spewmap.web;
 
-import com.google.gson.Gson;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.MultiPoint;
-import com.vividsolutions.jts.geom.Point;
-import edu.pitt.isg.spewmap.ResourceNotFound;
-import edu.pitt.isg.spewmap.geom.Feature;
-import edu.pitt.isg.spewmap.geom.FeatureCollection;
-import edu.pitt.isg.spewmap.geom.GeometryAid;
-import edu.pitt.isg.spewmap.geom.PropertyMap;
-import edu.pitt.isg.spewmap.spe.Household;
 import edu.pitt.isg.spewmap.spe.HouseholdRepo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.geo.GeoJsonMultiPolygon;
+import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
-import static edu.pitt.isg.spewmap.geom.GeometryAid.GEOJSON;
-import static java.util.Arrays.stream;
-import static java.util.stream.Collectors.joining;
-
 
 @RestController
-@RequestMapping("/households")
+@RequestMapping("/api/households")
 @RequiredArgsConstructor
 @Slf4j
 public class HouseholdController {
@@ -52,9 +24,36 @@ public class HouseholdController {
     private static final String BBOX = "/bbox/{xMin},{yMin},{xMax},{yMax}";
 
     private final HouseholdRepo repo;
-    private final GeometryAid aid;
-    private final TransactionTemplate transactionTemplate;
+//    private final GeometryAid aid;
+//    private final TransactionTemplate transactionTemplate;
 
+    @GetMapping("/count")
+    public Object count(){
+        return repo.count();
+    }
+
+    @GetMapping("/summary")
+    public Object summary(){
+        return repo.findAllByPointWithin(polygon()).count(); // spew1.3.0 should return 61,397.
+    }
+//    @GetMapping("/summarize")
+    @PostMapping("/summarize")
+    public Object summarize(@RequestBody GeoJsonMultiPolygon multiPolygon){
+        GeoJsonPolygon polygon = multiPolygon.getCoordinates().get(0);
+        return repo.findByPointWithin(polygon);
+//        return geometry; //repo.findByPointWithin(geometry.);
+    }
+
+    private GeoJsonPolygon polygon() {
+        return new GeoJsonPolygon(
+                new Point(-73.992514, 40.758934),
+                new Point(-73.961138, 40.760348),
+                new Point(-73.991658, 40.730006),
+                new Point(-73.992514, 40.758934));
+    }
+
+
+/*
     @RequestMapping(path=READ, produces={GEOJSON})
     public Object readGeoJson(@PathVariable String id){
         return aid.toFeature(read(id));
@@ -218,5 +217,5 @@ public class HouseholdController {
         final Geometry point = household.getPoint();
         final Coordinate coordinate = point.getCoordinate();
         return coordinate.x + " " + coordinate.y;
-    }
+    }*/
 }
