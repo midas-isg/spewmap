@@ -1,15 +1,22 @@
 package edu.pitt.isg.spewmap.spe;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 @Data
-//@Document(collection = "households")
+//@Document(collection = "map")
 @Document(collection = "mapHh")
 public class Household {
-    @Id
+    @Id @JsonIgnore
     private String id;
-    private int NP;
+    @Field("NP")
+    private int persons;
+    @Field("HINCP")
+    private int income;
+    @JsonIgnore
+//    private double[] location;
     private double[] point;
 }
