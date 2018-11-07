@@ -655,7 +655,7 @@ var SPEW_FORMAT = {
 		RACE: {
 			null: {
 				"original": "No data reported",
-				"concise": "No data reported"
+				"concise": "No data"
 			},
 			"10": {
 				"original": "White",
@@ -665,24 +665,116 @@ var SPEW_FORMAT = {
 				"original": "Black",
 				"concise": "Black"
 			},
+			"21": {
+				"original": "Black African",
+				"concise": "Black African"
+			},
+			"22": {
+				"original": "Black Caribbean",
+				"concise": "Black Caribbean"
+			},
+			"23": {
+				"original": "Afro-Ecuadorian",
+				"concise": "Afro-Ecuadorian"
+			},
+			"24": {
+				"original": "Other Black",
+				"concise": "Other Black"
+			},
 			"30": {
 				"original": "Indigenous",
 				"concise": "Indigenous"
+			},
+			"31": {
+				"original": "American Indian",
+				"concise": "American Indian"
+			},
+			"32": {
+				"original": "Latin American Indian",
+				"concise": "Lat American Indian"
 			},
 			"40": {
 				"original": "Asian",
 				"concise": "Asian"
 			},
+			"41": {
+				"original": "Chinese",
+				"concise": "Chinese"
+			},
+			"42": {
+				"original": "Japanese",
+				"concise": "Japanese"
+			},
+			"43": {
+				"original": "Korean",
+				"concise": "Korean"
+			},
+			"44": {
+				"original": "Vietnamese",
+				"concise": "Vietnamese"
+			},
+			"45": {
+				"original": "Filipino",
+				"concise": "Filipino"
+			},
+			"46": {
+				"original": "Indian",
+				"concise": "Indian"
+			},
+			"47": {
+				"original": "Pakistani",
+				"concise": "Pakistani"
+			},
+			"48": {
+				"original": "Bangladeshi",
+				"concise": "Bangladeshi"
+			},
+			"49": {
+				"original": "Other Asian",
+				"concise": "Other Asian"
+			},
 			"50": {
 				"original": "Mixed race",
 				"concise": "Mixed race"
 			},
+			"51": {
+				"original": "Brown (Brazil)",
+				"concise": "Brown"
+			},
+			"52": {
+				"original": "Mestizo (Indigenous and White)",
+				"concise": "Mestizo"
+			},
+			"53": {
+				"original": "Mulatto (Black and White)",
+				"concise": "Mulatto"
+			},
+			"54": {
+				"original": "Coloured (South Africa)",
+				"concise": "Coloured"
+			},
+			"55": {
+				"original": "Two or more races",
+				"concise": "Multiracial"
+			},
 			"60": {
 				"original": "Other",
 				"concise": "Other"
+			},
+			"61": {
+				"original": "Montubio (Ecuador)",
+				"concise": "Montubio"
+			},
+			"99": {
+				"original": "Unknown",
+				"concise": "Unknown"
 			}
 		},
 		SCHOOL: {
+			"null": {
+				"original": "No data reported",
+				"concise": "No data"
+			},
 			"0": {
 				"original": "NIU (not in universe)",
 				"concise": "NIU (not in universe)"

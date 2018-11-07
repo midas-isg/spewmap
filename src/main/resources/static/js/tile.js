@@ -77,14 +77,7 @@
 	showMenu();
 	
 	function onLoad() {
-		//var srcId = 'usa'; // usa with array & races-> race & ages ->age
-		var srcID = [
-				'aut',
-				'blr',
-				'can',
-				'fji',
-				'usa'
-			],
+		var srcID = COUNTRY_SOURCE_IDS,
 			i;
 		
 		map.on('zoomend', onZoomend);
@@ -833,7 +826,12 @@
 				featureArray = featureCollection.features,
 				geometryCoordinates,
 				i,
-				j;
+				j,
+				area,
+				rounded_area,
+				url,
+				combined,
+				geometry;
 			
 			for(i = 0; i < featureArray.length; i++) {
 				geometryCoordinates = featureArray[i].geometry.coordinates;
@@ -856,13 +854,13 @@
 				
 				closeButton.hidden = false;
 				features.style.display = 'block';
-				var area = turf.area(featureCollection);
+				area = turf.area(featureCollection);
 				// restrict to area to 2 decimal points
-				var rounded_area = Math.round(area*100)/100;
+				rounded_area = Math.round(area*100)/100;
 				//answer.innerHTML = '<span> The area of your polygon(s) is <strong>' + rounded_area + '</strong> square meters</span>';
-				var url = CONTEXT + '/summarize';
-				var combined = turf.combine(featureCollection);
-				var geometry = combined.features[0].geometry;
+				url = CONTEXT + '/summarize';
+				combined = turf.combine(featureCollection);
+				geometry = combined.features[0].geometry;
 				
 				features.innerHTML = "<b>Please wait...</b> <br/> <br/>Loading with the below query: <br/>" + JSON.stringify(geometry, null, 1);
 				tokenForSummary.cancel();
@@ -882,97 +880,102 @@
 		}
 		
 		function newMapboxDraw() {
-			var color1 = '#D20C0C';
-			var color2 = '#000';
-			var color3 = '#FFF';
-			
-			var lineStokeActive = {
-				id: 'gl-draw-line',
-				type: 'line',
-				filter: ['all', ['==', '$type', 'LineString'], ['!=', 'mode', 'static']],
-				layout: {
-					'line-cap': 'round',
-					'line-join': 'round'
+			var color1 = '#D20C0C',
+				color2 = '#000',
+				color3 = '#FFF',
+				lineStokeActive = {
+					id: 'gl-draw-line',
+					type: 'line',
+					filter: ['all', ['==', '$type', 'LineString'], ['!=', 'mode', 'static']],
+					layout: {
+						'line-cap': 'round',
+						'line-join': 'round'
+					},
+					paint: {
+						'line-color': color1,
+						'line-dasharray': [0.2, 2],
+						'line-width': 2
+					}
 				},
-				paint: {
-					'line-color': color1,
-					'line-dasharray': [0.2, 2],
-					'line-width': 2
-				}
-			}, polygonFillActive = {
-				id: 'gl-draw-polygon-fill',
-				type: 'fill',
-				filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
-				paint: {
-					'fill-color': color1,
-					'fill-outline-color': color1,
-					'fill-opacity': 0.1
-				}
-			}, polygonOutlineActive = {
-				// This doesn't style the first edge of the polygon, which uses the line stroke styling instead
-				id: 'gl-draw-polygon-stroke-active',
-				type: 'line',
-				filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
-				layout: {
-					'line-cap': 'round',
-					'line-join': 'round'
+				polygonFillActive = {
+					id: 'gl-draw-polygon-fill',
+					type: 'fill',
+					filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
+					paint: {
+						'fill-color': color1,
+						'fill-outline-color': color1,
+						'fill-opacity': 0.1
+					}
 				},
-				paint: {
-					'line-color': color1,
-					'line-dasharray': [0.2, 2],
-					'line-width': 2
-				}
-			}, vertexPointHalosActive = {
-				id: 'gl-draw-polygon-and-line-vertex-halo-active',
-				type: 'circle',
-				filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
-				paint: {
-					'circle-radius': 5,
-					'circle-color': color3
-				}
-			}, vertexPointsActive = {
-				id: 'gl-draw-polygon-and-line-vertex-active',
-				type: 'circle',
-				filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
-				paint: {
-					'circle-radius': 3,
-					'circle-color': color1
-				}
-			};
-			var lineStokeInactive = {
-				id: 'gl-draw-line-static',
-				type: 'line',
-				filter: ['all', ['==', '$type', 'LineString'], ['==', 'mode', 'static']],
-				layout: {
-					'line-cap': 'round',
-					'line-join': 'round'
+				polygonOutlineActive = {
+					// This doesn't style the first edge of the polygon, which uses the line stroke styling instead
+					id: 'gl-draw-polygon-stroke-active',
+					type: 'line',
+					filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
+					layout: {
+						'line-cap': 'round',
+						'line-join': 'round'
+					},
+					paint: {
+						'line-color': color1,
+						'line-dasharray': [0.2, 2],
+						'line-width': 2
+					}
 				},
-				paint: {
-					'line-color': color2,
-					'line-width': 3
-				}
-			}, polygonFillInactive = {
-				id: 'gl-draw-polygon-fill-static',
-				type: 'fill',
-				filter: ['all', ['==', '$type', 'Polygon'], ['==', 'mode', 'static']],
-				paint: {
-					'fill-color': color2,
-					'fill-outline-color': color2,
-					'fill-opacity': 0.1
-				}
-			}, polygonOutlineInactive = {
-				id: 'gl-draw-polygon-stroke-static',
-				type: 'line',
-				filter: ['all', ['==', '$type', 'Polygon'], ['==', 'mode', 'static']],
-				layout: {
-					'line-cap': 'round',
-					'line-join': 'round'
+				vertexPointHalosActive = {
+					id: 'gl-draw-polygon-and-line-vertex-halo-active',
+					type: 'circle',
+					filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
+					paint: {
+						'circle-radius': 5,
+						'circle-color': color3
+					}
 				},
-				paint: {
-					'line-color': color2,
-					'line-width': 3
-				}
-			};
+				vertexPointsActive = {
+					id: 'gl-draw-polygon-and-line-vertex-active',
+					type: 'circle',
+					filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
+					paint: {
+						'circle-radius': 3,
+						'circle-color': color1
+					}
+				},
+				lineStokeInactive = {
+					id: 'gl-draw-line-static',
+					type: 'line',
+					filter: ['all', ['==', '$type', 'LineString'], ['==', 'mode', 'static']],
+					layout: {
+						'line-cap': 'round',
+						'line-join': 'round'
+					},
+					paint: {
+						'line-color': color2,
+						'line-width': 3
+					}
+				},
+				polygonFillInactive = {
+					id: 'gl-draw-polygon-fill-static',
+					type: 'fill',
+					filter: ['all', ['==', '$type', 'Polygon'], ['==', 'mode', 'static']],
+					paint: {
+						'fill-color': color2,
+						'fill-outline-color': color2,
+						'fill-opacity': 0.1
+					}
+				},
+				polygonOutlineInactive = {
+					id: 'gl-draw-polygon-stroke-static',
+					type: 'line',
+					filter: ['all', ['==', '$type', 'Polygon'], ['==', 'mode', 'static']],
+					layout: {
+						'line-cap': 'round',
+						'line-join': 'round'
+					},
+					paint: {
+						'line-color': color2,
+						'line-width': 3
+					}
+				};
 			
 			return new MapboxDraw({
 				displayControlsDefault: false,
@@ -998,12 +1001,16 @@
 	
 	function requestWithCancel(method, url, token, body) {
 		var request = new XMLHttpRequest();
+		
 		request.open(method, url);
+		
 		if (body){
 			request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 			body = JSON.stringify(body);
 		}
+		
 		request.send(body);
+		
 		return new Promise(
 			function (resolve, reject) {
 				request.onload = function () {
@@ -1021,10 +1028,12 @@
 					
 					resolve(JSON.stringify(parsedResponse));
 				};
+				
 				token.cancel = function () {
 					request.abort();
 					reject(new Error('Cancelled')); // reject the promise
 				};
+				
 				request.onerror = reject;
 			}
 		);
@@ -1040,16 +1049,21 @@
 	
 	function queryString() {
 		return (function(a) {
+			var b = {},
+				i,
+				p;
+			
 			if (a === '') return {};
-			var b = {};
-			for (var i = 0; i < a.length; ++i)
-			{
-				var p=a[i].split('=', 2);
+			
+			for(i = 0; i < a.length; ++i) {
+				p=a[i].split('=', 2);
+				
 				if (p.length === 1)
 					b[p[0]] = '';
 				else
 					b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, ' '));
 			}
+			
 			return b;
 		})(window.location.search.substr(1).split('&'));
 	}
@@ -1057,10 +1071,12 @@
 	function toCenter(qs) {
 		var text = qs['center'],
 			tokens;
+		
 		if (text && text.includes(',')){
 			tokens = text.split(',');
 			return [tokens[0].valueOf(), tokens[1].valueOf()];
 		}
+		
 		return null
 	}
 	
