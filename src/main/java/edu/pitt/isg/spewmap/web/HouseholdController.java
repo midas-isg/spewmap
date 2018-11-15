@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 @RestController
-@RequestMapping("/api/households")
+@RequestMapping("/households/api")
 @RequiredArgsConstructor
 @Slf4j
 public class HouseholdController {
