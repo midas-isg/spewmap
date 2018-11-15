@@ -12,8 +12,10 @@ import org.springframework.data.mongodb.core.mapping.Field;
 public class Household {
     @Id @JsonIgnore
     private String id;
+    @Field("PERSONS")
+    private Integer persons;
     @Field("NP")
-    private int persons;
+    private Integer np;
     @Field("HINCP")
     private int income;
     @JsonIgnore
