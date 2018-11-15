@@ -17,7 +17,7 @@ public class Household {
     @Field("NP")
     private Integer np;
     @Field("HINCP")
-    private int income;
+    private Integer income;
     @JsonIgnore
 //    private double[] location;
     private double[] point;

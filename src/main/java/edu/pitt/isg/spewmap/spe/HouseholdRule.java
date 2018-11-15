@@ -11,7 +11,10 @@ import java.util.IntSummaryStatistics;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.summarizingInt;
 
 
@@ -27,8 +30,8 @@ public class HouseholdRule {
 
     private Mono<Map<String, Object>> stat(Flux<Household> households) {
         final Mono<Long> count =  households.count();
-        final Mono<IntSummaryStatistics> income = households.collect(summarizingInt(Household::getIncome));
-        final Mono<IntSummaryStatistics> persons = households.collect(summarizingInt(this::toPersons));
+        final Mono<IntSummaryStatistics> income = summarize(households, Household::getIncome);
+        final Mono<IntSummaryStatistics> persons = summarize(households, this::toPersons);
         final Mono<List<Household>> raw = households.collectList();
 
         return Mono.<Object, Object, Object, Object>zip(count, income, persons, raw).map(t -> {
@@ -41,7 +44,13 @@ public class HouseholdRule {
         });
     }
 
-    private int toPersons(Household hh) {
+    private Mono<IntSummaryStatistics> summarize(Flux<Household> households, Function<Household, Integer> mapper) {
+        return households.map(hh -> ofNullable(mapper.apply(hh)))
+                .filter(Optional::isPresent)
+                .collect(summarizingInt(Optional::get));
+    }
+
+    private Integer toPersons(Household hh) {
         final Integer persons = hh.getPersons();
         if (persons != null)
             return persons;
