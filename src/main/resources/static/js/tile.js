@@ -2,8 +2,9 @@
 
 (function(SPEW_FORMAT) {
 	var CONTEXT = '/spewmap/households/api',
+		//TILEHOST = 'http://localhost:9003/spewtiles_parallel/',
 		TILEHOST = 'https://spew.olympus.psc.edu/spewtiles/',
-		//TILEHOST = 'http://localhost:9003/',
+		//TILEHOST = 'https://spew.olympus.psc.edu/spewtiles_parallel/',
 		theZoom = 14,
 		tokenForSummary = {cancel: function(){}},
 		qs = queryString(),
