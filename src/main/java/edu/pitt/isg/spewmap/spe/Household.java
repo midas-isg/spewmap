@@ -7,8 +7,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 @Data
-//@Document(collection = "map")
-@Document(collection = "mapHh")
+@Document(collection = "map")
+//@Document(collection = "mapHh")
 public class Household {
     @Id @JsonIgnore
     private String id;
@@ -19,6 +19,6 @@ public class Household {
     @Field("HINCP")
     private Integer income;
     @JsonIgnore
-//    private double[] location;
-    private double[] point;
+    private double[] location;
+//    private double[] point;
 }

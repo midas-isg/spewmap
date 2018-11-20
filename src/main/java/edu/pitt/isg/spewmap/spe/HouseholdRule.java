@@ -25,7 +25,7 @@ public class HouseholdRule {
     private final HouseholdRepo repo;
 
     public Object summarize(GeoJsonPolygon polygon){
-        return stat(repo.findByPointWithin(polygon));
+        return stat(repo.findByLocationWithin(polygon));
     }
 
     private Mono<Map<String, Object>> stat(Flux<Household> households) {
