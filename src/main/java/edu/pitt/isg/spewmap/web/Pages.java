@@ -12,9 +12,9 @@ public class Pages {
 
     @GetMapping("/map")
     public String map(){
-        return "tile";
+        return "index";
     }
-
+/*
     @GetMapping("/tile")
     public String tile(){
         return "single-tile";
@@ -24,4 +24,5 @@ public class Pages {
     public String tiles(){
         return "tiles";
     }
+*/
 }
