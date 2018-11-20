@@ -1,9 +1,7 @@
 package edu.pitt.isg.spewmap.web;
 
-import edu.pitt.isg.spewmap.spe.Household;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
 @Controller
 public class Pages {
@@ -14,9 +12,9 @@ public class Pages {
 
     @GetMapping("/map")
     public String map(){
-        return "tile";
+        return "index";
     }
-
+/*
     @GetMapping("/tile")
     public String tile(){
         return "single-tile";
@@ -26,4 +24,5 @@ public class Pages {
     public String tiles(){
         return "tiles";
     }
+*/
 }

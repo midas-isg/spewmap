@@ -1,10 +1,9 @@
 "use strict";
 
+//please see tile.js for latest version
+
 (function(SPEW_FORMAT) {
 	var CONTEXT = '/spewmap/households/api',
-		//TILEHOST = 'http://localhost:9003/spewtiles_parallel/',
-		TILEHOST = 'https://spew.olympus.psc.edu/spewtiles/',
-		//TILEHOST = 'https://spew.olympus.psc.edu/spewtiles_parallel/',
 		theZoom = 14,
 		tokenForSummary = {cancel: function(){}},
 		qs = queryString(),
@@ -12,9 +11,8 @@
 		menuButton = document.getElementById('menu-button'),
 		zoomNoteButton = document.getElementById('zoom-note-button'),
 		REMAPPED_LABELS = SPEW_FORMAT.REMAPPED_LABELS,
-		//SINGULAR_MAPPINGS = SPEW_FORMAT.SINGULAR_MAPPINGS,
-		SPEW_US_FORMAT = SPEW_FORMAT.SPEW_US_FORMAT,
-		SPEW_IPUMS_FORMAT = SPEW_FORMAT.SPEW_IPUMS_FORMAT;
+		SINGULAR_MAPPINGS = SPEW_FORMAT.SINGULAR_MAPPINGS,
+		SPEW_US_FORMAT = SPEW_FORMAT.SPEW_US_FORMAT;
 	
 	mapboxgl.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
 	map = new mapboxgl.Map({
@@ -78,21 +76,17 @@
 	showMenu();
 	
 	function onLoad() {
-		var srcID = COUNTRY_SOURCE_IDS,
-			i;
-		
+		// var srcId = 'hh'; // usa with array & races-> races & ages ->age
+		var srcId = 'usa'; // usa with array & races-> race & ages ->age
 		map.on('zoomend', onZoomend);
 		onZoomend();
 		
 		addControls();
+		addSource(srcId);
+		addCircleLayers(srcId);
+		addTheLabelLayer(srcId);
 		
-		for(i = 0; i < srcID.length; i++) {
-			addSource(srcID[i]);
-			addCircleLayers(srcID[i]);
-			addTheLabelLayer(srcID[i]);
-		}
-		
-		function onZoomend() {
+		function onZoomend(){
 			var zoom = map.getZoom(),
 				zoomLabel = document.getElementById('zoom-level'),
 				zoomNote = document.getElementById('zoom-note');
@@ -108,27 +102,26 @@
 			
 			return;
 		}
-		
 		map.on('DISABLE-mouseup', function (e) { // Get features under the mouse pointer
 			var features = map.queryRenderedFeatures(e.point);
 			document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
 		});
 	}
 	
-	function addSource(srcID) {
-		map.addSource(srcID, { // Add a third party vector tile source https://www.mapbox.com/mapbox-gl-js/example/third-party/
+	function addSource(srcId) {
+		map.addSource(srcId, { // Add a third party vector tile source https://www.mapbox.com/mapbox-gl-js/example/third-party/
 			'type': 'vector',
-			'tiles': [TILEHOST + srcID + '/{z}/{x}/{y}.pbf'],
+			'tiles': ['https://spew.olympus.psc.edu/spewtiles/' + srcId + '/{z}/{x}/{y}.pbf'],
 			'minzoom': 0,
 			'maxzoom': theZoom
 		});
 	}
 	
-	function addTheLabelLayer(srcID) {
+	function addTheLabelLayer(srcId) {
 		map.addLayer({
-			id: 'label-' + srcID,
+			id: 'label',
 			type: 'symbol',
-			source: srcID,
+			source: srcId,
 			'source-layer': 'hh',
 			minzoom: 19, //19
 			layout: {
@@ -139,86 +132,79 @@
 		});
 	}
 	
-	function addCircleLayers(srcID) {
+	function addCircleLayers(srcId) {
 		var popup,
-			ageID = 'Householder Age',
-			raceID = 'Householder Race',
-			hhPersonsID = 'Size (Occupants)',
-			hhIncomeID = 'Income',
-			hhID = 'Household',
+			ageId = 'Householder Age',
+			raceId = 'Householder Race',
+			hhPersonsId = 'Size (Occupants)',
+			hhIncomeId = 'Income',
+			hhId = 'Household',
 			toggleableLayerIds = [
-				ageID,
-				raceID,
-				hhPersonsID,
-				hhIncomeID /*+ ' -' + srcID*/,
-				hhID
+				ageId,
+				raceId,
+				hhPersonsId,
+				hhIncomeId,
+				hhId
 			];
 		
-		addAgeTileLayer(ageID, srcID);
-		addRaceTileLayer(raceID, srcID);
-		addIncomeTileLayer(hhIncomeID, srcID);
-		addPersonsTileLayer(hhPersonsID, srcID);
-		addHouseholdTileLayer(hhID, srcID);
+		addAgeTileLayer(ageId, srcId);
+		addRaceTileLayer(raceId, srcId);
+		addPersonsTileLayer(hhPersonsId, srcId);
+		addIncomeTileLayer(hhIncomeId, srcId);
+		addHouseholdTileLayer(hhId, srcId);
 		
-		makeCircleLayersToggleable(hhID, srcID);
+		makeCircleLayersToggleable();
 		
-		function addAgeTileLayer(ageID, srcID) {
+		function addAgeTileLayer() {
 			var circleColor = [
 				'step',
-				['get', 'HH_AGE'],
+				['get', 'age'],
 				'rgb(0, 0, 255)', 34,
 				'rgb(51, 194, 255)', 44,
 				'rgb(230, 152, 0)', 54,
 				'rgb(255, 0, 0)', 64,
 				'rgb(255, 0, 255)'
 			];
-			addTileLayer(ageID, srcID, circleColor);
+			addTileLayer(ageId, srcId, circleColor);
 		}
 		
-		function addRaceTileLayer(raceID, srcID) {
+		function addRaceTileLayer() {
 			var circleColor = [
 					'match',
-					['get', 'HH_RACE'],
-					10, 'rgb(212, 44, 44)', //1 .White alone
-					20, 'rgb(0, 169, 157)', // 2 .Black or African American alone
-					// 30 .American Indian alone
-					//??, 'rgb(255, 255, 0)',// 4 .Alaska Native alone
-					// 31 .American Indian and Alaska Native tribes specified; or American .Indian or Alaska Native, not specified and no other races
-					40, 'rgb(153, 102, 255)',  // 6 .Asian alone
-					// 70 .Native Hawaiian and Other Pacific Islander alone
-					// 80 .Some Other Race alone
-					55, '#ffa500', // 9 .Two or More Races
+					['get', 'race'],
+					1, 'rgb(212, 44, 44)', //1 .White alone
+					2, 'rgb(0, 169, 157)', // 2 .Black or African American alone
+					// 3 .American Indian alone
+					//4, 'rgb(255, 255, 0)',// 4 .Alaska Native alone
+					// 5 .American Indian and Alaska Native tribes specified; or American .Indian or Alaska Native, not specified and no other races
+					6, 'rgb(153, 102, 255)',  // 6 .Asian alone
+					// 7 .Native Hawaiian and Other Pacific Islander alone
+					// 8 .Some Other Race alone
+					9, '#ffa500', // 9 .Two or More Races
 					'rgb(170, 147, 61)' // Other
 				],
 				raceCategories = {
 					'mapping': {
-						//1 : "White",
-						//2 : "Black",
+						1 : "White",
+						2 : "Black",
 						//3 : "American Indian",
 						//4 : "Alaskan",
 						//5 : "American Indian/Alaskan tribe specified or unspecified",
-						//6 : "Asian",
+						6 : "Asian",
 						//7 : "Native Hawaiian and Other Pacific Islander",
 						//8 : "Other",
-						//9: "Multiracial"
-						10: "White",
-						20: "Black",
-						30: "Indigenous",
-						31: "American Indian",
-						40: "Asian",
-						55: "Multiracial",
-						60: "Other"
+						9: "Multiracial"
 					},
 					'endMapping': "Other"
 				};
 			
-			addTileLayer(raceID, srcID, circleColor, raceCategories);
+			addTileLayer(raceId, srcId, circleColor, raceCategories);
 		}
 		
-		function addIncomeTileLayer(hhIncomeID, srcID) {
+		function addIncomeTileLayer(id, srcId) {
 			var circleColor = [
 					'step',
-					['get', 'HINCP'],
+					['get', 'income'],
 					'rgb(229, 159, 0)', 25000,
 					'rgb(168, 116, 0)', 75000,
 					'rgb(63, 115, 127)', 125000,
@@ -235,14 +221,13 @@
 					},
 					'endMapping': '&ge; 250'
 				};
-			addTileLayer(hhIncomeID, srcID, circleColor, incomeCategories);
+			addTileLayer(id, srcId, circleColor, incomeCategories);
 		}
 		
-		function addPersonsTileLayer(personsID, srcID) {
+		function addPersonsTileLayer(id, srcId) {
 			var circleColor = [
 					'match',
-					['get', 'PERSONS'],
-					//['get', 'NP'],
+					['get', 'persons'],
 					1, rgb(67, 2, 252),
 					2, rgb(7, 221, 249),
 					3, rgb(242, 201, 15),
@@ -253,15 +238,15 @@
 					'endMapping': "&ge; 5"
 				};
 			
-			addTileLayer(personsID, srcID, circleColor, sizeCategories);
+			addTileLayer(id, srcId, circleColor, sizeCategories);
 		}
 		
-		function addHouseholdTileLayer(id, srcID) {
-			addTileLayer(id, srcID, 'orange');
+		function addHouseholdTileLayer(id, srcId) {
+			addTileLayer(id, srcId, 'orange');
 		}
 		
-		function addLegend(category, circleColor, categoryValues) {
-			var legendPanel = document.getElementById('legend-panel'),
+		function addLegend(legendID, circleColor, categoryValues) {
+			var menuPanel = document.getElementById('legend-panel'),
 				legendItem = document.createElement('div'),
 				legendTitle = document.createElement('caption'),
 				legendItemTable = document.createElement('table'),
@@ -271,8 +256,7 @@
 				contentRow = document.createElement('tr'),
 				content,
 				bubbleCell,
-				legendID = category + '-legend',
-				categoryLegend = category,
+				categoryLegend = legendID,
 				categoryMapping,
 				categoryEndMapping,
 				i;
@@ -402,18 +386,16 @@
 			
 			legendItemTable.appendChild(tableBody);
 			legendItem.appendChild(legendItemTable);
-			legendPanel.appendChild(legendItem);
+			menuPanel.appendChild(legendItem);
 			
 			return;
 		}
 		
-		function addTileLayer(layerID, srcID, circleColor, categoryValues) {
-			var layerSourceID = layerID + ' -' + srcID;
-			
+		function addTileLayer(id, srcId, circleColor, categoryValues) {
 			map.addLayer({
-				'id': layerSourceID,
+				'id': id,
 				'type': 'circle',
-				'source': srcID,
+				'source': srcId,
 				'source-layer': 'hh',
 				paint: {
 					'circle-radius': {
@@ -423,9 +405,9 @@
 					'circle-color': circleColor
 				}
 			}, 'waterway-label');
-			makeLayerClickable(layerSourceID, srcID);
+			makeLayerClickable(id, srcId);
 			
-			addLegend(layerID, circleColor, categoryValues);
+			addLegend(id, circleColor, categoryValues);
 		}
 		
 		function makeLayerClickable(id, srcId) {
@@ -457,9 +439,9 @@
 				}
 				
 				popup = new mapboxgl.Popup()
-					.setLngLat(coordinates)
-					.setDOMContent(popupContent)
-					.addTo(map);
+				.setLngLat(coordinates)
+				.setDOMContent(popupContent)
+				.addTo(map);
 				
 				for(i = 0; i < tabs.length; i++) {
 					tabButton = document.getElementById(tabs[i] + '-button');
@@ -508,15 +490,12 @@
 					k,
 					values,
 					householdSize,
-					householdCategories = {},
 					i,
 					label,
 					category,
 					raw = {},
 					readable = {},
-					code,
-					currentFormat,
-					temp;
+					code;
 				
 				html += '<div id="human-readable-button" class="active-tab-button">Household</div>';
 				html += '<div id="individuals-button" class="tab-button">Individual</div>';
@@ -526,26 +505,16 @@
 				html += '<div id="human-readable-tab">';
 				
 				for (k in obj) {
-					if (obj.hasOwnProperty(k) && (k.substring(0, 3) !== "HH_")) {
+					if (obj.hasOwnProperty(k)) {
 						values = obj[k].toString();
 						
-						if((values.charAt(0) === '{') || (values.charAt(0) === '[')) {
+						if(values.charAt(0) === '[') {
 							values = values.substring(1, obj[k].length - 1).split(',');
 						}
 						else {
-							householdCategories[k] = true;
-							
-							if(REMAPPED_LABELS[k]){
-								householdCategories[REMAPPED_LABELS[k]['label']] = true;
-							}
-							
-							if(values.length > 0) {
-								values = [values];
-							}
-							else {
-								values = [null];
-							}
+							values = [values];
 						}
+						
 						category = k;
 						
 						if(REMAPPED_LABELS[k]) {
@@ -565,14 +534,6 @@
 						else {
 							code = k;
 						}
-						//code = SPEW_FORMAT.CODES[category] || k;
-						
-						if(SPEW_IPUMS_FORMAT[category]) {
-							currentFormat = SPEW_IPUMS_FORMAT;
-						}
-						else {
-							currentFormat = SPEW_US_FORMAT;
-						}
 						
 						label = label.charAt(0).toUpperCase() + label.substring(1);
 						
@@ -580,21 +541,15 @@
 						raw[code] = [];
 						readable[label] = [];
 						for(i = 0; i < values.length; i++) {
-							if(currentFormat[category] && currentFormat[category][values[i]]['concise']){
-								readable[label].push(currentFormat[category][values[i]]['concise']);
+							if(SPEW_US_FORMAT[category] && SPEW_US_FORMAT[category][values[i]]['concise']){
+								readable[label].push(SPEW_US_FORMAT[category][values[i]]['concise']);
 							}
 							else {
 								readable[label].push(values[i]);
 							}
 							
 							if(values[i] !== "null"){
-								temp = parseInt(values[i]);
-								if(!Number.isNaN(temp)) {
-									raw[code].push(temp);
-								}
-								else {
-									raw[code].push(values[i]);
-								}
+								raw[code].push(parseInt(values[i]));
 							}
 							else {
 								raw[code].push(null);
@@ -602,49 +557,47 @@
 						}
 						
 						//Make the human-readable tab rows
-						if(code !== "NP") {
-							html += '<div>';
-							//html += '<span title="' + code + '">';
-							html += '<span>';
-							html += '<b>' + label + '</b></span>: ';
+						html += '<div>';
+						//html += '<span title="' + code + '">';
+						html += '<span>';
+						html += '<b>' + label + '</b></span>: ';
+						
+						if(SPEW_US_FORMAT[category]) {
+							if(values.length > 1) {
+								html += '[';
+							}
 							
-							if(currentFormat[category]) {
-								if(values.length > 1) {
-									html += '[';
-								}
+							if(SPEW_US_FORMAT[category][values[0]]['original']){
+								html += '<span title="' + SPEW_US_FORMAT[category][values[0]]['original'] + '">';
+							}
+							else {
+								html += '<span>';
+							}
+							
+							html += readable[label][0] + '</span>';
+							
+							for(i = 1; i < values.length; i++) {
+								html += ', ';
 								
-								if(currentFormat[category][values[0]]['original']) {
-									html += '<span title="' + currentFormat[category][values[0]]['original'] + '">';
+								if(SPEW_US_FORMAT[category][values[i]]['original']){
+									html += '<span title="' + SPEW_US_FORMAT[category][values[i]]['original'] + '">';
 								}
 								else {
 									html += '<span>';
 								}
 								
-								html += readable[label][0] + '</span>';
-								
-								for(i = 1; i < values.length; i++) {
-									html += ', ';
-									
-									if(currentFormat[category][values[i]]['original']){
-										html += '<span title="' + currentFormat[category][values[i]]['original'] + '">';
-									}
-									else {
-										html += '<span>';
-									}
-									
-									html += readable[label][i] + '</span>';
-								}
-								
-								if(values.length > 1) {
-									html += ']';
-								}
-							}
-							else {
-								html += obj[k];
+								html += readable[label][i] + '</span>';
 							}
 							
-							html += '</div>';
+							if(values.length > 1) {
+								html += ']';
+							}
 						}
+						else {
+							html += obj[k];
+						}
+						
+						html += '</div>';
 					}
 				}
 				
@@ -658,19 +611,15 @@
 						
 						if(raw[k].length > 1) {
 							html += '[';
-							
-							html += raw[k][0];
-							for(i = 1; i < raw[k].length; i++) {
-								html += ', ' + raw[k][i];
-							}
-							
-							html += ']';
 						}
-						else {
-							html += raw[k][0];
-							for(i = 1; i < raw[k].length; i++) {
-								html += ', ' + raw[k][i];
-							}
+						
+						html += raw[k][0];
+						for(i = 1; i < raw[k].length; i++) {
+							html += ', ' + raw[k][i];
+						}
+						
+						if(raw[k].length > 1) {
+							html += ']';
 						}
 						
 						html += '</span></div>';
@@ -679,14 +628,14 @@
 				
 				//make the individuals tab
 				html += '</div><div id="individuals-tab" hidden>[';
-				householdSize = parseInt(raw['PERSONS']) || parseInt(raw['NP']);
+				householdSize = parseInt(raw['NP']);
 				
 				for(i = 0; i < householdSize; i++) {
 					html += '<div>&emsp;{</div>';
 					
 					for(k in readable) {
-						if(readable.hasOwnProperty(k) && (!householdCategories[k])) {
-							html += '<div>&emsp;&emsp;<strong>' + k +
+						if(readable.hasOwnProperty(k) && SINGULAR_MAPPINGS[k]) {
+							html += '<div>&emsp;&emsp;<strong>' + SINGULAR_MAPPINGS[k] +
 								'</strong>: ' + readable[k][i] + '</div>';
 						}
 					}
@@ -700,77 +649,61 @@
 			}
 		}
 		
-		function makeCircleLayersToggleable(hhID, srcID) {
+		function makeCircleLayersToggleable() {
 			var id2link = {},
-				layerID,
+				layerId,
 				layers,
 				link,
 				i;
 			
 			for (i = 0; i < toggleableLayerIds.length; i++) {
-				layerID = toggleableLayerIds[i] + ' -' + srcID;
-				link = document.getElementById(toggleableLayerIds[i]);
+				layerId = toggleableLayerIds[i];
 				
-				if(!link){
-					link = document.createElement('a');
-					link.id = toggleableLayerIds[i];
-					link.href = '#';
-					link.textContent = toggleableLayerIds[i];
+				link = document.createElement('a');
+				link.href = '#';
+				link.textContent = layerId;
+				id2link[layerId] = link;
+				
+				if (layerId !== hhId)
+					hide.call(link, layerId);
+				else
+					show.call(link, layerId);
+				
+				link.onclick = function (e) {
+					var clickedLayer = this.textContent,
+						visibility = map.getLayoutProperty(clickedLayer, 'visibility'),
+						layer,
+						i;
 					
-					layers = document.getElementById('menu');
-					layers.appendChild(link);
-				}
-				
-				id2link[layerID] = link;
-				
-				if (toggleableLayerIds[i] !== hhID){
-					hideLayer.call(link, layerID, toggleableLayerIds[i]);
-				}
-				else {
-					showLayer.call(link, layerID, toggleableLayerIds[i]);
-				}
-				
-				(function(clickedLayerID, category) {
-					link.addEventListener("click", function (e) {
-						var visibility = map.getLayoutProperty(clickedLayerID, 'visibility'),
-							otherLayerID,
-							i;
-						
-						//to my knowledge we can probably delete these two lines,
-						//but more testing is needed to see if removing causes side effects
-						//e.preventDefault();
-						//e.stopPropagation();
-						
-						if (visibility === 'visible') {
-							hideLayer.call(this, clickedLayerID, category);
+					e.preventDefault();
+					e.stopPropagation();
+					
+					if (visibility === 'visible') {
+						hide.call(this, clickedLayer);
+					}
+					else {
+						for (i = 0; i < toggleableLayerIds.length; i++) {
+							layer = toggleableLayerIds[i];
+							hide.call(id2link[layer], layer);
 						}
-						else {
-							for (i = 0; i < toggleableLayerIds.length; i++) {
-								otherLayerID = toggleableLayerIds[i] + ' -' + srcID;
-								
-								if(otherLayerID !== clickedLayerID) {
-									hideLayer.call(id2link[otherLayerID], otherLayerID, toggleableLayerIds[i]);
-								}
-								else {
-									showLayer.call(this, clickedLayerID, toggleableLayerIds[i]);
-								}
-							}
-						}
-					});
-				})(layerID, toggleableLayerIds[i]);
+						show.call(this, clickedLayer);
+					}
+				};
+				
+				layers = document.getElementById('menu');
+				layers.appendChild(link);
 			}
 			
-			//TODO: refactor showLayer() and hideLayer()
-			function showLayer(layerID, layerCategory) {
+			function show(id) {
 				this.className = 'active';
-				map.setLayoutProperty(layerID, 'visibility', 'visible');
-				document.getElementById(layerCategory + '-legend').style.display = 'block';
+				map.setLayoutProperty(id, 'visibility', 'visible');
+				document.getElementById(id).style.display = 'block';
 			}
 			
-			function hideLayer(layerID, layerCategory) {
-				this.className = null;
-				map.setLayoutProperty(layerID, 'visibility', 'none');
-				document.getElementById(layerCategory + '-legend').style.display = 'none';
+			function hide(id) {
+				this.className = '';
+				map.setLayoutProperty(id, 'visibility', 'none');
+				document.getElementById(id).style.display = 'none';
 			}
 		}
 		
@@ -827,12 +760,7 @@
 				featureArray = featureCollection.features,
 				geometryCoordinates,
 				i,
-				j,
-				area,
-				rounded_area,
-				url,
-				combined,
-				geometry;
+				j;
 			
 			for(i = 0; i < featureArray.length; i++) {
 				geometryCoordinates = featureArray[i].geometry.coordinates;
@@ -855,13 +783,13 @@
 				
 				closeButton.hidden = false;
 				features.style.display = 'block';
-				area = turf.area(featureCollection);
+				var area = turf.area(featureCollection);
 				// restrict to area to 2 decimal points
-				rounded_area = Math.round(area*100)/100;
+				var rounded_area = Math.round(area*100)/100;
 				//answer.innerHTML = '<span> The area of your polygon(s) is <strong>' + rounded_area + '</strong> square meters</span>';
-				url = CONTEXT + '/summarize';
-				combined = turf.combine(featureCollection);
-				geometry = combined.features[0].geometry;
+				var url = CONTEXT + '/summarize';
+				var combined = turf.combine(featureCollection);
+				var geometry = combined.features[0].geometry;
 				
 				features.innerHTML = "<b>Please wait...</b> <br/> <br/>Loading with the below query: <br/>" + JSON.stringify(geometry, null, 1);
 				tokenForSummary.cancel();
@@ -881,102 +809,97 @@
 		}
 		
 		function newMapboxDraw() {
-			var color1 = '#D20C0C',
-				color2 = '#000',
-				color3 = '#FFF',
-				lineStokeActive = {
-					id: 'gl-draw-line',
-					type: 'line',
-					filter: ['all', ['==', '$type', 'LineString'], ['!=', 'mode', 'static']],
-					layout: {
-						'line-cap': 'round',
-						'line-join': 'round'
-					},
-					paint: {
-						'line-color': color1,
-						'line-dasharray': [0.2, 2],
-						'line-width': 2
-					}
+			var color1 = '#D20C0C';
+			var color2 = '#000';
+			var color3 = '#FFF';
+			
+			var lineStokeActive = {
+				id: 'gl-draw-line',
+				type: 'line',
+				filter: ['all', ['==', '$type', 'LineString'], ['!=', 'mode', 'static']],
+				layout: {
+					'line-cap': 'round',
+					'line-join': 'round'
 				},
-				polygonFillActive = {
-					id: 'gl-draw-polygon-fill',
-					type: 'fill',
-					filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
-					paint: {
-						'fill-color': color1,
-						'fill-outline-color': color1,
-						'fill-opacity': 0.1
-					}
+				paint: {
+					'line-color': color1,
+					'line-dasharray': [0.2, 2],
+					'line-width': 2
+				}
+			}, polygonFillActive = {
+				id: 'gl-draw-polygon-fill',
+				type: 'fill',
+				filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
+				paint: {
+					'fill-color': color1,
+					'fill-outline-color': color1,
+					'fill-opacity': 0.1
+				}
+			}, polygonOutlineActive = {
+				// This doesn't style the first edge of the polygon, which uses the line stroke styling instead
+				id: 'gl-draw-polygon-stroke-active',
+				type: 'line',
+				filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
+				layout: {
+					'line-cap': 'round',
+					'line-join': 'round'
 				},
-				polygonOutlineActive = {
-					// This doesn't style the first edge of the polygon, which uses the line stroke styling instead
-					id: 'gl-draw-polygon-stroke-active',
-					type: 'line',
-					filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
-					layout: {
-						'line-cap': 'round',
-						'line-join': 'round'
-					},
-					paint: {
-						'line-color': color1,
-						'line-dasharray': [0.2, 2],
-						'line-width': 2
-					}
+				paint: {
+					'line-color': color1,
+					'line-dasharray': [0.2, 2],
+					'line-width': 2
+				}
+			}, vertexPointHalosActive = {
+				id: 'gl-draw-polygon-and-line-vertex-halo-active',
+				type: 'circle',
+				filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
+				paint: {
+					'circle-radius': 5,
+					'circle-color': color3
+				}
+			}, vertexPointsActive = {
+				id: 'gl-draw-polygon-and-line-vertex-active',
+				type: 'circle',
+				filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
+				paint: {
+					'circle-radius': 3,
+					'circle-color': color1
+				}
+			};
+			var lineStokeInactive = {
+				id: 'gl-draw-line-static',
+				type: 'line',
+				filter: ['all', ['==', '$type', 'LineString'], ['==', 'mode', 'static']],
+				layout: {
+					'line-cap': 'round',
+					'line-join': 'round'
 				},
-				vertexPointHalosActive = {
-					id: 'gl-draw-polygon-and-line-vertex-halo-active',
-					type: 'circle',
-					filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
-					paint: {
-						'circle-radius': 5,
-						'circle-color': color3
-					}
+				paint: {
+					'line-color': color2,
+					'line-width': 3
+				}
+			}, polygonFillInactive = {
+				id: 'gl-draw-polygon-fill-static',
+				type: 'fill',
+				filter: ['all', ['==', '$type', 'Polygon'], ['==', 'mode', 'static']],
+				paint: {
+					'fill-color': color2,
+					'fill-outline-color': color2,
+					'fill-opacity': 0.1
+				}
+			}, polygonOutlineInactive = {
+				id: 'gl-draw-polygon-stroke-static',
+				type: 'line',
+				filter: ['all', ['==', '$type', 'Polygon'], ['==', 'mode', 'static']],
+				layout: {
+					'line-cap': 'round',
+					'line-join': 'round'
 				},
-				vertexPointsActive = {
-					id: 'gl-draw-polygon-and-line-vertex-active',
-					type: 'circle',
-					filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
-					paint: {
-						'circle-radius': 3,
-						'circle-color': color1
-					}
-				},
-				lineStokeInactive = {
-					id: 'gl-draw-line-static',
-					type: 'line',
-					filter: ['all', ['==', '$type', 'LineString'], ['==', 'mode', 'static']],
-					layout: {
-						'line-cap': 'round',
-						'line-join': 'round'
-					},
-					paint: {
-						'line-color': color2,
-						'line-width': 3
-					}
-				},
-				polygonFillInactive = {
-					id: 'gl-draw-polygon-fill-static',
-					type: 'fill',
-					filter: ['all', ['==', '$type', 'Polygon'], ['==', 'mode', 'static']],
-					paint: {
-						'fill-color': color2,
-						'fill-outline-color': color2,
-						'fill-opacity': 0.1
-					}
-				},
-				polygonOutlineInactive = {
-					id: 'gl-draw-polygon-stroke-static',
-					type: 'line',
-					filter: ['all', ['==', '$type', 'Polygon'], ['==', 'mode', 'static']],
-					layout: {
-						'line-cap': 'round',
-						'line-join': 'round'
-					},
-					paint: {
-						'line-color': color2,
-						'line-width': 3
-					}
-				};
+				paint: {
+					'line-color': color2,
+					'line-width': 3
+				}
+			};
 			
 			return new MapboxDraw({
 				displayControlsDefault: false,
@@ -1002,16 +925,12 @@
 	
 	function requestWithCancel(method, url, token, body) {
 		var request = new XMLHttpRequest();
-		
 		request.open(method, url);
-		
 		if (body){
 			request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 			body = JSON.stringify(body);
 		}
-		
 		request.send(body);
-		
 		return new Promise(
 			function (resolve, reject) {
 				request.onload = function () {
@@ -1029,12 +948,10 @@
 					
 					resolve(JSON.stringify(parsedResponse));
 				};
-				
 				token.cancel = function () {
 					request.abort();
 					reject(new Error('Cancelled')); // reject the promise
 				};
-				
 				request.onerror = reject;
 			}
 		);
@@ -1050,21 +967,16 @@
 	
 	function queryString() {
 		return (function(a) {
-			var b = {},
-				i,
-				p;
-			
 			if (a === '') return {};
-			
-			for(i = 0; i < a.length; ++i) {
-				p=a[i].split('=', 2);
-				
+			var b = {};
+			for (var i = 0; i < a.length; ++i)
+			{
+				var p=a[i].split('=', 2);
 				if (p.length === 1)
 					b[p[0]] = '';
 				else
 					b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, ' '));
 			}
-			
 			return b;
 		})(window.location.search.substr(1).split('&'));
 	}
@@ -1072,12 +984,10 @@
 	function toCenter(qs) {
 		var text = qs['center'],
 			tokens;
-		
 		if (text && text.includes(',')){
 			tokens = text.split(',');
 			return [tokens[0].valueOf(), tokens[1].valueOf()];
 		}
-		
 		return null
 	}
 	
