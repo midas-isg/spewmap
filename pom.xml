@@ -5,7 +5,7 @@
 
 	<groupId>edu.pitt.isg</groupId>
 	<artifactId>spewmap</artifactId>
-	<version>0.5.0</version>
+	<version>0.6.0</version>
 	<packaging>jar</packaging>
 
 	<name>spewmap</name>
