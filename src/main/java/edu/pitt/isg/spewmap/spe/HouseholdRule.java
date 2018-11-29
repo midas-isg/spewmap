@@ -2,22 +2,19 @@ package edu.pitt.isg.spewmap.spe;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-import static java.util.Collections.singletonMap;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -39,8 +36,7 @@ public class HouseholdRule {
     private static final String MAX = "max";
     private static final String AVERAGE = "average";
 
-//    private final ReactiveMongoTemplate template;
-    private final MongoTemplate template;
+    private final ReactiveMongoTemplate template;
 
     public Object summarize(GeoJsonPolygon polygon){
         final MatchOperation match = match(where("location").within(polygon));
@@ -48,12 +44,15 @@ public class HouseholdRule {
 //                .first("$$CURRENT").as("sample")
                 ;
         final TypedAggregation<Household> aggregation = newAggregation(Household.class, match, group);
-        final AggregationResults<LinkedHashMap> results = template.aggregate(aggregation, "map", LinkedHashMap.class);
-        final LinkedHashMap raw = results.getUniqueMappedResult();
-        if (raw == null) {
-            return Mono.just(singletonMap(HOUSEHOLDS, 0));
-        }
-        return Mono.just(format(raw));
+        final Flux<LinkedHashMap> results = template.aggregate(aggregation, "map", LinkedHashMap.class);
+//        return results.last(defaultMap()).map(this::format);
+        return results.next().defaultIfEmpty(defaultMap()).map(this::format);
+    }
+
+    private LinkedHashMap defaultMap() {
+        final LinkedHashMap<String, Integer> map = new LinkedHashMap<>();
+        map.put(HOUSEHOLDS, 0);
+        return map;
     }
 
     private GroupOperation addStats(GroupOperation groupOperation) {
@@ -66,26 +65,25 @@ public class HouseholdRule {
 
     private GroupOperation addStats(String key, GroupOperation groupOperation) {
         return groupOperation
-                .sum(countNumbers(key)).as(key +"_" + COUNT)
+                .sum(countIfNumber(key)).as(key +"_" + COUNT)
                 .sum(key).as(key +"_" + SUM)
                 .min(key).as(key +"_" + MIN)
                 .max(key).as(key +"_" + MAX)
                 .avg(key).as(key +"_" + AVERAGE);
     }
 
-    private ConditionalOperators.Cond countNumbers(String key) {
-        return when(where(key).gt(Double.NEGATIVE_INFINITY)).then(1).otherwise(0);
+    private ConditionalOperators.Cond countIfNumber(String key) {
+        return when(where(key).gte(Double.NEGATIVE_INFINITY)).then(1).otherwise(0);
     }
 
-    private Map<String, Object> format(LinkedHashMap<String, Object> raw) {
+    private Map<String, Object> format(Map<String, Object> raw) {
         final Map<String, Object> map = new LinkedHashMap<>();
-        map.put("households", 0);
-        final HashMap<String, Object> pMap = new LinkedHashMap<>();
-        final HashMap<String, Object> nMap = new LinkedHashMap<>();
-        final HashMap<String, Object> iMap = new LinkedHashMap<>();
+        map.put(HOUSEHOLDS, 0);
+        final Map<String, Object> pMap = new LinkedHashMap<>();
+        final Map<String, Object> nMap = new LinkedHashMap<>();
+        final Map<String, Object> iMap = new LinkedHashMap<>();
         map.put("income", iMap);
         map.put("persons", pMap);
-//        map.put("np", nMap);
         for (Map.Entry<String, Object> pair : raw.entrySet()){
             final String key = pair.getKey();
             if (key.startsWith(personsFieldName + "_")){
@@ -100,9 +98,6 @@ public class HouseholdRule {
                 map.put(key, pair.getValue());
             }
         }
-//        LinkedHashMap<Object, Object> tmp = new LinkedHashMap<>();
-//        tmp.putAll(pMap);
-//        map.put("p", tmp);
         mergeAsStats(pMap, nMap);
         return map;
     }
@@ -119,14 +114,14 @@ public class HouseholdRule {
         final Object b = map1.get(AVERAGE);
         if (b == null)
             return;
-        final Object o = map1.get(COUNT);
+        final Object c = map1.get(COUNT);
         if (a == null) {
             map.put(AVERAGE, b);
-            map.put(COUNT, o);
+            map.put(COUNT, c);
             return;
         }
         int cnt = (int)map.get(COUNT);
-        int cnt1 = (int)o;
+        int cnt1 = (int)c;
         double sum = (double)a *  cnt;
         double sum1 = (double)b * cnt1;
         int count = cnt + cnt1;
