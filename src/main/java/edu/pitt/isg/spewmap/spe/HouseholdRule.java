@@ -7,7 +7,9 @@ import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
+import org.springframework.data.mongodb.core.geo.GeoJsonMultiPolygon;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -38,15 +40,26 @@ public class HouseholdRule {
 
     private final ReactiveMongoTemplate template;
 
-    public Object summarize(GeoJsonPolygon polygon){
-        final MatchOperation match = match(where("location").within(polygon));
+    public Object summarize(GeoJsonMultiPolygon multiPolygon){
+        final MatchOperation match = match(within(multiPolygon));
         final GroupOperation group = addStats(group().count().as(HOUSEHOLDS))
 //                .first("$$CURRENT").as("sample")
                 ;
         final TypedAggregation<Household> aggregation = newAggregation(Household.class, match, group);
         final Flux<LinkedHashMap> results = template.aggregate(aggregation, "map", LinkedHashMap.class);
-//        return results.last(defaultMap()).map(this::format);
         return results.next().defaultIfEmpty(defaultMap()).map(this::format);
+    }
+
+    private Criteria within(GeoJsonMultiPolygon multiPolygon) {
+        return new Criteria().orOperator(
+                multiPolygon.getCoordinates().stream()
+                        .map(this::within)
+                        .toArray(Criteria[]::new)
+        );
+    }
+
+    private Criteria within(GeoJsonPolygon shape) {
+        return where("location").within(shape);
     }
 
     private LinkedHashMap defaultMap() {

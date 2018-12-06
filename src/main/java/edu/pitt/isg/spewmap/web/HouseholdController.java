@@ -19,6 +19,6 @@ public class HouseholdController {
 
     @PostMapping("/summarize")
     public Object summarize(@RequestBody GeoJsonMultiPolygon multiPolygon){
-        return rule.summarize(multiPolygon.getCoordinates().get(0));
+        return rule.summarize(multiPolygon);
     }
 }
