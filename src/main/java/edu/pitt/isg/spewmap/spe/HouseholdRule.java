@@ -42,12 +42,12 @@ public class HouseholdRule {
 
     public Object summarize(GeoJsonMultiPolygon multiPolygon){
         final MatchOperation match = match(within(multiPolygon));
-        final GroupOperation group = addStats(group().count().as(HOUSEHOLDS))
+        final GroupOperation group = addStats(group("countryId").count().as(HOUSEHOLDS))
 //                .first("$$CURRENT").as("sample")
                 ;
         final TypedAggregation<Household> aggregation = newAggregation(Household.class, match, group);
         final Flux<LinkedHashMap> results = template.aggregate(aggregation, "map", LinkedHashMap.class);
-        return results.next().defaultIfEmpty(defaultMap()).map(this::format);
+        return results.map(this::format);
     }
 
     private Criteria within(GeoJsonMultiPolygon multiPolygon) {
@@ -92,6 +92,7 @@ public class HouseholdRule {
     private Map<String, Object> format(Map<String, Object> raw) {
         final Map<String, Object> map = new LinkedHashMap<>();
         map.put(HOUSEHOLDS, 0);
+        map.put("Country", raw.get("_id"));
         final Map<String, Object> pMap = new LinkedHashMap<>();
         final Map<String, Object> nMap = new LinkedHashMap<>();
         final Map<String, Object> iMap = new LinkedHashMap<>();

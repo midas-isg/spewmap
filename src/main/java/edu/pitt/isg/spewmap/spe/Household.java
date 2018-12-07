@@ -13,6 +13,8 @@ public class Household {
     private String id;
     @Field("PERSONS")
     private Integer persons;
+    @Field("COUNTRY")
+    private Integer countryId;
     @Field("NP")
     private Integer np;
     @Field("HINCP")
