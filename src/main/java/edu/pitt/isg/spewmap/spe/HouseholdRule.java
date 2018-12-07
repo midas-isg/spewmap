@@ -13,10 +13,13 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
+import static java.util.Collections.emptyMap;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -37,7 +40,12 @@ public class HouseholdRule {
     private static final String MIN = "min";
     private static final String MAX = "max";
     private static final String AVERAGE = "average";
-
+    private static final String ALL = "All countries";
+    private static final Map<String, String> iso2countryName = new HashMap<>();
+    static {
+        iso2countryName.put("null", "USA");
+        iso2countryName.put("124", "Canada");
+    }
     private final ReactiveMongoTemplate template;
 
     public Object summarize(GeoJsonMultiPolygon multiPolygon){
@@ -47,7 +55,43 @@ public class HouseholdRule {
                 ;
         final TypedAggregation<Household> aggregation = newAggregation(Household.class, match, group);
         final Flux<LinkedHashMap> results = template.aggregate(aggregation, "map", LinkedHashMap.class);
-        return results.map(this::format);
+        return results.map(this::format).reduce(newMap(),this::map);
+    }
+
+    private Map<String, Object> map(Object a, Object b) {
+        final Map<String, Object> map = (Map<String, Object>)a;
+        final Map<String, Object> value = (Map<String, Object>)b;
+        map.put(toName(value), value);
+        mergeAsStats(getAllPersonMap(map), (Map<String, Object>)value.getOrDefault(personsFieldName, emptyMap()));
+        final Map<String, Object> allCountryMap = getAllCountryMap(map);
+        allCountryMap.replace(HOUSEHOLDS, toLong(allCountryMap.get(HOUSEHOLDS)) + toLong(value.getOrDefault(HOUSEHOLDS, 0L)));
+        value.remove("country");
+        return map;
+    }
+
+    private Map<String, Object> getAllPersonMap(Map<String, Object> map) {
+        final Map<String, Object> acMap = getAllCountryMap(map);
+        Object pMap = acMap.getOrDefault(personsFieldName, new LinkedHashMap<String, Object>());
+        acMap.put(personsFieldName, pMap);
+        return (Map<String, Object>)pMap;
+    }
+
+    private Map<String, Object> getAllCountryMap(Map<String, Object> map) {
+        return (Map<String, Object>)map.get(ALL);
+    }
+
+    private String toName(Map<String, Object> map) {
+        final String key = Objects.toString(map.get("country"));
+        return iso2countryName.getOrDefault(key, key);
+//        return Objects.toString(key);
+    }
+
+    private Map<String, Object> newMap(){
+        final Map<String, Object> map = new LinkedHashMap<>();
+        final Map<Object, Object> value = new LinkedHashMap<>();
+        value.put(HOUSEHOLDS, 0);
+        map.put(ALL, value);
+        return map;
     }
 
     private Criteria within(GeoJsonMultiPolygon multiPolygon) {
@@ -92,7 +136,7 @@ public class HouseholdRule {
     private Map<String, Object> format(Map<String, Object> raw) {
         final Map<String, Object> map = new LinkedHashMap<>();
         map.put(HOUSEHOLDS, 0);
-        map.put("Country", raw.get("_id"));
+        map.put("country", raw.getOrDefault("_id", "USA"));
         final Map<String, Object> pMap = new LinkedHashMap<>();
         final Map<String, Object> nMap = new LinkedHashMap<>();
         final Map<String, Object> iMap = new LinkedHashMap<>();
@@ -119,8 +163,12 @@ public class HouseholdRule {
     private void mergeAsStats(Map<String, Object> map, Map<String, Object> map1) {
         update(map, map1, MIN, (a, b)-> Integer.min((int)a, (int)b));
         update(map, map1, MAX, (a, b)-> Integer.max((int)a, (int)b));
-        update(map, map1, SUM, (a, b)-> (long)(int)a + (long)(int)b);
+        update(map, map1, SUM, (a, b)-> toLong(a) + toLong(b));
         updateAvgAndCount(map, map1);
+    }
+
+    private long toLong(Object a) {
+        return a == null ? 0L : Long.parseLong("" + a);
     }
 
     private void updateAvgAndCount(Map<String, Object> map, Map<String, Object> map1) {
