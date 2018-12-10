@@ -126,6 +126,25 @@ var SPEW_FORMAT = {
 		"serialno": "SERIALNO",
 		"employments": "ESR",
 		"relationships": "RELP"
+		
+		/*
+		"AGE": "ages",
+		"puma_id": "puma",
+		"YEAR": "year",
+		"RAC1P": "races",
+		"SEX": "sexes",
+		"SCHG": "grades",
+		"SYNTHETIC_HID": "hid",
+		"HINCP": "income",
+		"place_id": "region",
+		"COUNTRY": "country",
+		"INCTOT": "incomes",
+		"NP": "persons",
+		"SCH": "schools",
+		"SERIALNO": "serialno",
+		"ESR": "employments",
+		"RELP": "relationships"
+		*/
 	},
 	SPEW_US_FORMAT: {
 		ESR: {
@@ -229,8 +248,9 @@ var SPEW_FORMAT = {
 			}
 		},
 		incomes: {
-			"null": {
-				"concise": "N/A" // original value not provided
+			null: {
+				"original": "null",
+				"concise": "N/A"
 			}
 		},
 		RAC1P: {
@@ -654,6 +674,20 @@ var SPEW_FORMAT = {
 			"99": {
 				"original": "Unclassifiable",
 				"concise": "Unclassifiable"
+			}
+		},
+		INCTOT:{
+			"null": {
+				"original": "null",
+				"concise": "No data reported"
+			},
+			"9999998": {
+				"original": "9999998",
+				"concise": "Unknown/missing"
+			},
+			"9999999": {
+				"original": "9999999",
+				"concise": "NIU (not in universe)"
 			}
 		},
 		RACE: {
