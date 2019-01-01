@@ -46,7 +46,8 @@ var SPEW_FORMAT = {
 			"label": "Employment"
 		},
 		"HINCP" : {
-			"label": "Household Income"
+			"label": "Household Income",
+			"use": "INCTOT"
 		},
 		"HHTYPE": {
 			"label": "Household Type"
@@ -121,7 +122,7 @@ var SPEW_FORMAT = {
 		"region": "place_id",
 		"country": "COUNTRY",
 		"incomes": "INCTOT",
-		"persons": "NP",
+		"PERSONS": "NP",
 		"schools": "SCH",
 		"serialno": "SERIALNO",
 		"employments": "ESR",
@@ -139,7 +140,7 @@ var SPEW_FORMAT = {
 		"place_id": "region",
 		"COUNTRY": "country",
 		"INCTOT": "incomes",
-		"NP": "persons",
+		"NP": "PERSONS",
 		"SCH": "schools",
 		"SERIALNO": "serialno",
 		"ESR": "employments",
@@ -681,9 +682,17 @@ var SPEW_FORMAT = {
 				"original": "null",
 				"concise": "No data reported"
 			},
+			9999998: {
+				"original": 9999998,
+				"concise": "Unknown/missing"
+			},
 			"9999998": {
 				"original": "9999998",
 				"concise": "Unknown/missing"
+			},
+			9999999: {
+				"original": 9999999,
+				"concise": "NIU (not in universe)"
 			},
 			"9999999": {
 				"original": "9999999",
