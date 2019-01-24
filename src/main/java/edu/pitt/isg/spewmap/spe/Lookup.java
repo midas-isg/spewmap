@@ -1,0 +1,111 @@
+package edu.pitt.isg.spewmap.spe;
+
+import java.util.HashMap;
+import java.util.Map;
+
+class Lookup {
+    private Lookup(){ }
+
+    static final Map<String, String> countryCode2Name = init();
+
+    /** https://international.ipums.org/international-action/variables/COUNTRY#codes_section */
+    private static Map<String, String> init() {
+        Map<String, String> map = new HashMap<>();
+        map.put("null","USA");
+        map.put("32","Argentina");
+        map.put("40","Austria");
+        map.put("50","Bangladesh");
+        map.put("51","Armenia");
+        map.put("68","Bolivia");
+        map.put("72","Botswana");
+        map.put("76","Brazil");
+        map.put("112","Belarus");
+        map.put("116","Cambodia");
+        map.put("120","Cameroon");
+        map.put("124","Canada");
+        map.put("152","Chile");
+        map.put("156","China");
+        map.put("170","Colombia");
+        map.put("188","Costa Rica");
+        map.put("192","Cuba");
+        map.put("204","Benin");
+        map.put("208","Denmark");
+        map.put("214","Dominican Republic");
+        map.put("218","Ecuador");
+        map.put("222","El Salvador");
+        map.put("231","Ethiopia");
+        map.put("242","Fiji");
+        map.put("250","France");
+        map.put("275","Palestine");
+        map.put("276","Germany");
+        map.put("288","Ghana");
+        map.put("300","Greece");
+        map.put("324","Guinea");
+        map.put("332","Haiti");
+        map.put("340","Honduras");
+        map.put("348","Hungary");
+        map.put("352","Iceland");
+        map.put("356","India");
+        map.put("360","Indonesia");
+        map.put("364","Iran");
+        map.put("368","Iraq");
+        map.put("372","Ireland");
+        map.put("376","Israel");
+        map.put("380","Italy");
+        map.put("388","Jamaica");
+        map.put("400","Jordan");
+        map.put("404","Kenya");
+        map.put("417","Kyrgyz Republic");
+        map.put("426","Lesotho");
+        map.put("430","Liberia");
+        map.put("454","Malawi");
+        map.put("458","Malaysia");
+        map.put("466","Mali");
+        map.put("484","Mexico");
+        map.put("496","Mongolia");
+        map.put("504","Morocco");
+        map.put("508","Mozambique");
+        map.put("524","Nepal");
+        map.put("528","Netherlands");
+        map.put("558","Nicaragua");
+        map.put("566","Nigeria");
+        map.put("578","Norway");
+        map.put("586","Pakistan");
+        map.put("591","Panama");
+        map.put("598","Papua New Guinea");
+        map.put("600","Paraguay");
+        map.put("604","Peru");
+        map.put("608","Philippines");
+        map.put("616","Poland");
+        map.put("620","Portugal");
+        map.put("630","Puerto Rico");
+        map.put("642","Romania");
+        map.put("646","Rwanda");
+        map.put("662","Saint Lucia");
+        map.put("686","Senegal");
+        map.put("694","Sierra Leone");
+        map.put("704","Vietnam");
+        map.put("705","Slovenia");
+        map.put("710","South Africa");
+        map.put("716","Zimbabwe");
+        map.put("724","Spain");
+        map.put("728","South Sudan");
+        map.put("729","Sudan");
+        map.put("752","Sweden");
+        map.put("756","Switzerland");
+        map.put("764","Thailand");
+        map.put("780","Trinidad and Tobago");
+        map.put("792","Turkey");
+        map.put("800","Uganda");
+        map.put("804","Ukraine");
+        map.put("818","Egypt");
+        map.put("826","United Kingdom");
+        map.put("834","Tanzania");
+        map.put("840","United States");
+        map.put("854","Burkina Faso");
+        map.put("858","Uruguay");
+        map.put("862","Venezuela");
+        map.put("894","Zambia");
+        return map;
+    }
+}
