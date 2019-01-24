@@ -15,8 +15,11 @@ import reactor.core.publisher.Flux;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
+import static edu.pitt.isg.spewmap.spe.Lookup.countryCode2Name;
+import static java.util.Collections.emptyMap;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -31,23 +34,62 @@ public class HouseholdRule {
     private final static String npFieldName = "np";
     private final static String personsFieldName = "persons";
     private final static String incomeFieldName = "income";
+    private static final String countryFieldName = "country";
+    private final static String occupantsFieldName = "Size (Occupants)";
     private static final String HOUSEHOLDS = "households";
     private static final String COUNT = "count";
     private static final String SUM = "sum";
     private static final String MIN = "min";
     private static final String MAX = "max";
     private static final String AVERAGE = "average";
+    private static final String ALL = "All countries";
 
     private final ReactiveMongoTemplate template;
 
     public Object summarize(GeoJsonMultiPolygon multiPolygon){
         final MatchOperation match = match(within(multiPolygon));
-        final GroupOperation group = addStats(group().count().as(HOUSEHOLDS))
+        final GroupOperation group = addStats(group("countryId").count().as(HOUSEHOLDS))
 //                .first("$$CURRENT").as("sample")
                 ;
         final TypedAggregation<Household> aggregation = newAggregation(Household.class, match, group);
         final Flux<LinkedHashMap> results = template.aggregate(aggregation, "map", LinkedHashMap.class);
-        return results.next().defaultIfEmpty(defaultMap()).map(this::format);
+        return results.map(this::format).reduce(newMap(),this::map);
+    }
+
+    private Map<String, Object> map(Object a, Object b) {
+        final Map<String, Object> map = (Map<String, Object>)a;
+        final Map<String, Object> value = (Map<String, Object>)b;
+        map.put(toName(value), value);
+        mergeAsStats(getAllPersonMap(map), (Map<String, Object>)value.getOrDefault(occupantsFieldName, emptyMap()));
+        final Map<String, Object> allCountryMap = getAllCountryMap(map);
+        allCountryMap.replace(HOUSEHOLDS, toLong(allCountryMap.get(HOUSEHOLDS)) + toLong(value.getOrDefault(HOUSEHOLDS, 0L)));
+        value.remove(countryFieldName);
+        return map;
+    }
+
+    private Map<String, Object> getAllPersonMap(Map<String, Object> map) {
+        final Map<String, Object> acMap = getAllCountryMap(map);
+        Object pMap = acMap.getOrDefault(occupantsFieldName, new LinkedHashMap<String, Object>());
+        acMap.put(occupantsFieldName, pMap);
+        return (Map<String, Object>)pMap;
+    }
+
+    private Map<String, Object> getAllCountryMap(Map<String, Object> map) {
+        return (Map<String, Object>)map.get(ALL);
+    }
+
+    private String toName(Map<String, Object> map) {
+        final String key = Objects.toString(map.get("country"));
+        return countryCode2Name.getOrDefault(key, key);
+//        return Objects.toString(key);
+    }
+
+    private Map<String, Object> newMap(){
+        final Map<String, Object> map = new LinkedHashMap<>();
+        final Map<Object, Object> value = new LinkedHashMap<>();
+        value.put(HOUSEHOLDS, 0);
+        map.put(ALL, value);
+        return map;
     }
 
     private Criteria within(GeoJsonMultiPolygon multiPolygon) {
@@ -92,11 +134,12 @@ public class HouseholdRule {
     private Map<String, Object> format(Map<String, Object> raw) {
         final Map<String, Object> map = new LinkedHashMap<>();
         map.put(HOUSEHOLDS, 0);
+        map.put("country", raw.getOrDefault("_id", countryCode2Name.getOrDefault("null", "USA")));
         final Map<String, Object> pMap = new LinkedHashMap<>();
         final Map<String, Object> nMap = new LinkedHashMap<>();
         final Map<String, Object> iMap = new LinkedHashMap<>();
         map.put("income", iMap);
-        map.put("persons", pMap);
+        map.put(occupantsFieldName, pMap);
         for (Map.Entry<String, Object> pair : raw.entrySet()){
             final String key = pair.getKey();
             if (key.startsWith(personsFieldName + "_")){
@@ -116,10 +159,15 @@ public class HouseholdRule {
     }
 
     private void mergeAsStats(Map<String, Object> map, Map<String, Object> map1) {
+        map.putIfAbsent(COUNT, 0); // to be in standard order
+        update(map, map1, SUM, (a, b)-> toLong(a) + toLong(b));
         update(map, map1, MIN, (a, b)-> Integer.min((int)a, (int)b));
         update(map, map1, MAX, (a, b)-> Integer.max((int)a, (int)b));
-        update(map, map1, SUM, (a, b)-> (long)(int)a + (long)(int)b);
         updateAvgAndCount(map, map1);
+    }
+
+    private long toLong(Object a) {
+        return a == null ? 0L : Long.parseLong("" + a);
     }
 
     private void updateAvgAndCount(Map<String, Object> map, Map<String, Object> map1) {
