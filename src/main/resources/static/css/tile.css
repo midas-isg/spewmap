@@ -188,6 +188,7 @@ body {
     top: 75px;
     right: 3px;
     max-height: 560px;
+    overflow: auto;
 }
 
 #legend-panel {

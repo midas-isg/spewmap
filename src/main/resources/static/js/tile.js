@@ -1060,6 +1060,7 @@
 				};
 				
 				request.onerror = reject;
+				request.timeout = reject;//(request.statusText);
 			}
 		);
 	}
