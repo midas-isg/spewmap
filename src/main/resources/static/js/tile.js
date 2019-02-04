@@ -2,9 +2,9 @@
 
 (function(SPEW_FORMAT) {
 	var CONTEXT = '/spewmap/households/api',
-		//TILEHOST = 'http://localhost:9003/spewtiles_parallel/',
+		//TILEHOST = 'http://localhost:9003/',
 		TILEHOST = 'https://spew.olympus.psc.edu/spewtiles/',
-		//TILEHOST = 'https://spew.olympus.psc.edu/spewtiles_parallel/',
+		//TILEHOST = 'https://spew.olympus.psc.edu/spewtiles_test/',
 		theZoom = 14,
 		tokenForSummary = {cancel: function(){}},
 		qs = queryString(),
@@ -223,7 +223,9 @@
 					'rgb(168, 116, 0)', 75000,
 					'rgb(63, 115, 127)', 125000,
 					'rgb(63, 115, 127)', 250000,
-					'rgb(11, 181, 255)'
+					'rgb(11, 181, 255)', 9999997,
+					'rgb(128, 128, 128)', 9999998,
+					'rgb(128, 128, 128)'
 				],
 				incomeCategories = {
 					'legend': 'Income (x $1000)',
@@ -231,9 +233,12 @@
 						25000: '0-25',
 						75000: '25-75',
 						125000: '75-125',
-						250000: '125-250'
+						250000: '125-250',
+						9999997: '&ge; 250',
+						9999998: 'Unknown/missing',
+						9999999: 'Not in universe'
 					},
-					'endMapping': '&ge; 250'
+					'endMapping': 'Not in universe'
 				};
 			addTileLayer(hhIncomeID, srcID, circleColor, incomeCategories);
 		}
@@ -577,27 +582,33 @@
 						label = label.charAt(0).toUpperCase() + label.substring(1);
 						
 						//Parse data
-						raw[code] = [];
+						//raw[code] = [];
+						raw[k] = [];
 						readable[label] = [];
 						for(i = 0; i < values.length; i++) {
-							if(currentFormat[category] && currentFormat[category][values[i]]['concise']){
-								readable[label].push(currentFormat[category][values[i]]['concise']);
-							}
-							else {
-								readable[label].push(values[i]);
+							readable[label].push(values[i]);
+							
+							if(currentFormat[category] && currentFormat[category][values[i]]) {
+								if(currentFormat[category][values[i]]['concise']) {
+									readable[label][i] = currentFormat[category][values[i]]['concise'];
+								}
 							}
 							
 							if(values[i] !== "null"){
 								temp = parseInt(values[i]);
+								
 								if(!Number.isNaN(temp)) {
-									raw[code].push(temp);
+									//raw[code].push(temp);
+									raw[k].push(temp);
 								}
 								else {
-									raw[code].push(values[i]);
+									//raw[code].push(values[i]);
+									raw[k].push(values[i]);
 								}
 							}
 							else {
-								raw[code].push(null);
+								//raw[code].push(null);
+								raw[k].push(null);
 							}
 						}
 						
@@ -613,26 +624,40 @@
 									html += '[';
 								}
 								
-								if(currentFormat[category][values[0]]['original']) {
+								if(currentFormat[category][values[0]] && currentFormat[category][values[0]]['original']) {
 									html += '<span title="' + currentFormat[category][values[0]]['original'] + '">';
 								}
 								else {
 									html += '<span>';
 								}
 								
-								html += readable[label][0] + '</span>';
+								if(readable[label][0]) {
+									html += readable[label][0];
+								}
+								else {
+									html += values[0];
+								}
+								
+								html += '</span>';
 								
 								for(i = 1; i < values.length; i++) {
 									html += ', ';
 									
-									if(currentFormat[category][values[i]]['original']){
+									if(currentFormat[category][values[i]] && currentFormat[category][values[i]]['original']){
 										html += '<span title="' + currentFormat[category][values[i]]['original'] + '">';
 									}
 									else {
 										html += '<span>';
 									}
 									
-									html += readable[label][i] + '</span>';
+									if(readable[label][i]) {
+										html += readable[label][i];
+									}
+									else {
+										html += values[i];
+									}
+									
+									html += '</span>';
 								}
 								
 								if(values.length > 1) {
@@ -686,8 +711,7 @@
 					
 					for(k in readable) {
 						if(readable.hasOwnProperty(k) && (!householdCategories[k])) {
-							html += '<div>&emsp;&emsp;<strong>' + k +
-								'</strong>: ' + readable[k][i] + '</div>';
+							html += '<div>&emsp;&emsp;<strong>' + k + '</strong>: ' + readable[k][i] + '</div>';
 						}
 					}
 					
@@ -1036,6 +1060,7 @@
 				};
 				
 				request.onerror = reject;
+				request.timeout = reject;//(request.statusText);
 			}
 		);
 	}
