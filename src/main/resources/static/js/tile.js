@@ -1039,19 +1039,26 @@
 		return new Promise(
 			function (resolve, reject) {
 				request.onload = function () {
-					var parsedResponse = JSON.parse(request.responseText),
+					var parsedResponse,
 						k;
 					
-					for(k in parsedResponse) {
-						if(parsedResponse.hasOwnProperty(k)) {
-							if(REMAPPED_LABELS[k]) {
-								parsedResponse[REMAPPED_LABELS[k]['label']] = parsedResponse[k];
-								delete parsedResponse[k];
+					try {
+						parsedResponse = JSON.parse(request.responseText);
+						
+						for(k in parsedResponse) {
+							if(parsedResponse.hasOwnProperty(k)) {
+								if(REMAPPED_LABELS[k]) {
+									parsedResponse[REMAPPED_LABELS[k]['label']] = parsedResponse[k];
+									delete parsedResponse[k];
+								}
 							}
 						}
+						
+						resolve(JSON.stringify(parsedResponse));
 					}
-					
-					resolve(JSON.stringify(parsedResponse));
+					catch(err) {
+						resolve(err + "<br>" + request.responseText);
+					}
 				};
 				
 				token.cancel = function () {
