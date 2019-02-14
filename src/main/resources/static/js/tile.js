@@ -892,7 +892,20 @@
 				Rx.Observable.fromPromise(postWithCancel(url, tokenForSummary, geometry))
 				.subscribe(function (response){
 					console.log(response);
-					features.innerHTML = "<b>Result of the querying polgon(s):</b><br/>" + JSON.stringify(JSON.parse(response), null, 2);
+					
+					try {
+						features.innerHTML = "<b>Result of the querying polgon(s):</b><br/>" + JSON.stringify(JSON.parse(response), null, 2);
+					}
+					catch(exception){
+						var k;
+						features.innerHTML = "<b>" + exception + "</b><br/>";
+						
+						for(k in response) {
+							if(response.hasOwnProperty(k)) {
+								features.innerHTML += k + ": " + response[k] + "<br>";
+							}
+						}
+					}
 				});
 			}
 			else {
@@ -1029,7 +1042,7 @@
 		
 		request.open(method, url);
 		
-		if (body){
+		if(body) {
 			request.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
 			body = JSON.stringify(body);
 		}
@@ -1038,6 +1051,9 @@
 		
 		return new Promise(
 			function (resolve, reject) {
+				request.onerror = reject;
+				request.timeout = request.onerror;
+				
 				request.onload = function () {
 					var parsedResponse,
 						k;
@@ -1056,8 +1072,13 @@
 						
 						resolve(JSON.stringify(parsedResponse));
 					}
-					catch(err) {
-						resolve(err + "<br>" + request.responseText);
+					catch(exception) {
+						resolve(JSON.stringify({
+							"path": request.responseURL,
+							"status": request.status,
+							"error": request.statusText,
+							"message": request.responseText
+						}));
 					}
 				};
 				
@@ -1065,9 +1086,6 @@
 					request.abort();
 					reject(new Error('Cancelled')); // reject the promise
 				};
-				
-				request.onerror = reject;
-				request.timeout = reject;//(request.statusText);
 			}
 		);
 	}
