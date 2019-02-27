@@ -15,7 +15,7 @@
 		//SINGULAR_MAPPINGS = SPEW_FORMAT.SINGULAR_MAPPINGS,
 		SPEW_US_FORMAT = SPEW_FORMAT.SPEW_US_FORMAT,
 		SPEW_IPUMS_FORMAT = SPEW_FORMAT.SPEW_IPUMS_FORMAT;
-	
+
 	mapboxgl.accessToken = 'pk.eyJ1IjoidHBzMjMiLCJhIjoiVHEzc0tVWSJ9.0oYZqcggp29zNZlCcb2esA';
 	map = new mapboxgl.Map({
 		style: 'mapbox://styles/mapbox/light-v9',
@@ -818,7 +818,7 @@
 	
 	function addControls() {
 		var draw;
-		
+
 		map.addControl(new mapboxgl.NavigationControl(), 'top-left');
 		draw = newMapboxDraw();
 		map.addControl(draw, 'top-left');
@@ -892,7 +892,7 @@
 				Rx.Observable.fromPromise(postWithCancel(url, tokenForSummary, geometry))
 				.subscribe(function (response){
 					console.log(response);
-					features.innerHTML = "<b>Result of the querying polgon(s):</b><br/>" + JSON.stringify(JSON.parse(response), null, 2);
+					renderResult(JSON.parse(response));
 				});
 			}
 			else {
@@ -1023,7 +1023,11 @@
 			});
 		}
 	}
-	
+
+	function renderResult(json) {
+		features.innerHTML = "<b>Result of the querying polgon(s):</b><br/>" + JSON.stringify(json, null, 2);
+	}
+
 	function requestWithCancel(method, url, token, body) {
 		var request = new XMLHttpRequest();
 		
@@ -1038,32 +1042,56 @@
 		
 		return new Promise(
 			function (resolve, reject) {
+				var eventSource;
 				request.onload = function () {
-					var parsedResponse,
-						k;
-					
-					try {
-						parsedResponse = JSON.parse(request.responseText);
-						
-						for(k in parsedResponse) {
-							if(parsedResponse.hasOwnProperty(k)) {
-								if(REMAPPED_LABELS[k]) {
+					if (request.responseText.startsWith("redirect:")){
+						var tokens = request.responseText.split(":");
+						var path = tokens[1];
+						var url = CONTEXT + "/"+ path;
+						console.log('redirected to ' + url);
+						eventSource = new EventSource(url);
+						eventSource.onmessage = function(e) {
+							// debugger;
+							var data = e.data;
+							var json = parse(data);
+							if (json['pending'] !== true){
+								eventSource.close();
+								renderResult(json);
+							} else {
+								json.redirect = path;
+							}
+						};
+						eventSource.onerror = function(e) {
+							// debugger;
+							console.log(e); //TODO: should get more descriptive error for debugging purposes.
+							eventSource.close();
+							renderResult({type: e.type, url: e.currentTarget && e.currentTarget.url, timeStamp: e.timeStamp});
+						};
+						// resolve('{"' + tokens[0] + '":"' + path + '"}');
+					} else {
+						resolve(JSON.stringify(parse(request.responseText)));
+					}
+
+					function parse(responseText) {
+						var parsedResponse = JSON.parse(responseText),
+							k;
+						for (k in parsedResponse) {
+							if (parsedResponse.hasOwnProperty(k)) {
+								if (REMAPPED_LABELS[k]) {
 									parsedResponse[REMAPPED_LABELS[k]['label']] = parsedResponse[k];
 									delete parsedResponse[k];
 								}
 							}
 						}
-						
-						resolve(JSON.stringify(parsedResponse));
-					}
-					catch(err) {
-						resolve(err + "<br>" + request.responseText);
+						return parsedResponse;
 					}
 				};
 				
 				token.cancel = function () {
 					request.abort();
 					reject(new Error('Cancelled')); // reject the promise
+					if (eventSource)
+						eventSource.close();
 				};
 				
 				request.onerror = reject;

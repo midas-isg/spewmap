@@ -2,6 +2,7 @@ package edu.pitt.isg.spewmap.spe;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.reactivestreams.Publisher;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
@@ -12,6 +13,7 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -46,7 +48,7 @@ public class HouseholdRule {
 
     private final ReactiveMongoTemplate template;
 
-    public Object summarize(GeoJsonMultiPolygon multiPolygon){
+    public Mono<Object> summarize(GeoJsonMultiPolygon multiPolygon){
         final MatchOperation match = match(within(multiPolygon));
         final GroupOperation group = addStats(group("countryId").count().as(HOUSEHOLDS))
 //                .first("$$CURRENT").as("sample")
