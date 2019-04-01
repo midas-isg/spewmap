@@ -1,2 +1,1 @@
-spring.datasource.username=
-spring.datasource.password=
+spring.data.mongodb.host=
